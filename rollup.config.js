@@ -1,14 +1,24 @@
-import typescript from 'rollup-plugin-typescript'
-import OMT from '@surma/rollup-plugin-off-main-thread';
+import typescript from '@rollup/plugin-typescript';
+import nodeResolve from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import webWorkerLoader from "rollup-plugin-web-worker-loader";
 
 export default {
-  input: 'src/map/Satellite.ts',
-  output: {
-    dir: 'dist',
-    format: 'esm'
-  },
-  plugins: [
-    OMT(),
-    typescript({ target: 'ES2017' })
-  ]
-}
+    input: 'src/Satellite/Satellite.ts',
+    output: {
+        dir: 'dist',
+        format: 'esm',
+    },
+    plugins: [
+        typescript({ target: 'ES2017' }),
+        nodeResolve(),
+        commonjs(),
+        webWorkerLoader({
+            inline: true,
+            targetPlatform: "browser",
+            extensions: ["ts", "js"],
+            external: [],
+        })
+    ],
+    external: id => (/^three/.test(id) || id == 'proj4'),
+};

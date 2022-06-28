@@ -1,7 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
-import OMT from '@surma/rollup-plugin-off-main-thread';
+import webWorkerLoader from "rollup-plugin-web-worker-loader";
 import {liveServer} from 'rollup-plugin-live-server';
 import cleaner from 'rollup-plugin-cleaner';
 
@@ -27,10 +27,19 @@ export default {
     },
     plugins: [
         cleaner({ targets: ['./public/'] }),
-        OMT(),
+        // OMT(),
         typescript({ target: 'ES2017' }),
         nodeResolve(),
         commonjs(),
+        webWorkerLoader({
+            inline: false,
+            targetPlatform: "browser",
+            extensions: ["ts", "js"],
+            external: [],
+            preserveFileNames: true,
+            loadPath: 'public',
+            // plugins: []
+        }),
         liveServer({
             root: './',
             file: 'index.html'

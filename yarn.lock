@@ -429,6 +429,11 @@ define-property@^2.0.2:
     is-descriptor "^1.0.2"
     isobject "^3.0.1"
 
+delatin@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmmirror.com/delatin/-/delatin-0.2.0.tgz#c54f6ac395e5ba9e6eb6cd8b7cdfa6acf27128f6"
+  integrity sha512-HvDx6I5Jju/mqFp58/qeSL1wx6rYxsLWpWVSCQvL1Ps8MhVlttwm+Ohl38dUSTN439uxag//vXJm09PqFz+/Og==
+
 depd@2.0.0, depd@~2.0.0:
   version "2.0.0"
   resolved "https://registry.npmmirror.com/depd/-/depd-2.0.0.tgz#b696163cc757560d09cf22cc8fad1571b79e76df"
@@ -1533,6 +1538,11 @@ rollup-plugin-live-server@^2.0.0:
   integrity sha512-slDKB+8139+8rSoRoK3VSTH/nwlEjh4E9iPbqloB3YIUqmU7hrtr2/6HNjsYxB9owMAud8H9S/8yRWXTDDD7zg==
   dependencies:
     live-server "^1.2.1"
+
+rollup-plugin-web-worker-loader@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.npmmirror.com/rollup-plugin-web-worker-loader/-/rollup-plugin-web-worker-loader-1.6.1.tgz#9d7a27575b64b0780fe4e8b3bc87470d217e485f"
+  integrity sha512-4QywQSz1NXFHKdyiou16mH3ijpcfLtLGOrAqvAqu1Gx+P8+zj+3gwC2BSL/VW1d+LW4nIHC8F7d7OXhs9UdR2A==
 
 rollup@^2.75.6:
   version "2.75.6"

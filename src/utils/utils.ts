@@ -2,8 +2,8 @@ import proj4 from 'proj4';
 import { AbortableFetch, Coordinate } from './interfaces';
 
 
-proj4.defs('EPSG:4326', '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees');
-
+// proj4.defs('EPSG:4326', );
+export const WGS84 = '+title=WGS 84 (long/lat) +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees';
 // 地球半径
 export const EARTH_RADIUS = 6378137;
 // 地球周长
@@ -30,7 +30,7 @@ export function tileToLat(row: number, level: number) {
 
 export function wgs84ToUTM(coord: Coordinate, zone: number, offset?: Coordinate): Coordinate {
     const utm = `+proj=utm +zone= ${zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs `;
-    const res = proj4('EPSG:4326', utm).forward(coord);
+    const res = proj4(WGS84, utm).forward(coord);
     if (offset) {
         res.x -= offset.x;
         res.y -= offset.y;

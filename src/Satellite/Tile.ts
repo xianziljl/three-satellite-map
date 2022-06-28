@@ -1,6 +1,9 @@
 import { Camera, CanvasTexture, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../utils/interfaces'
 import { Satellite } from './Satellite';
+import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
+import GeometryWorker from 'web-worker:./workers/GeometryWorker.ts';
+// import proj4 from 'proj4';
 
 
 export class Tile extends Mesh {
@@ -79,10 +82,11 @@ export class Tile extends Mesh {
         const { version, id, uid, level, row, col, map, canvas } = this;
 
         if (!Tile.textureWorker) {
-            Tile.textureWorker = new Worker(
-                new URL('./workers/Texture.worker.ts', import.meta.url),
-                { type: "module" }
-            );
+            Tile.textureWorker = new TextureWorker();
+            // Tile.textureWorker = new Worker(
+            //     new URL('./workers/Texture.worker.ts', import.meta.url),
+            //     { type: "module" }
+            // );
         }
 
         if (!this.onTextureWorkerMessage) {
@@ -117,10 +121,11 @@ export class Tile extends Mesh {
     // 加载网格
     public loadGeometryInWorker() {
         if (!Tile.geometryWorker) {
-            Tile.geometryWorker = new Worker(
-                new URL('./workers/Geometry.worker.ts', import.meta.url),
-                { type: "module" }
-            );
+            Tile.geometryWorker = new GeometryWorker();
+            // Tile.geometryWorker = new Worker(
+            //     new URL('./workers/Geometry.worker.ts', import.meta.url),
+            //     { type: "module" }
+            // );
         }
         if (!this.onGeometryWorkerMessage) {
             this.onGeometryWorkerMessage = (e: MessageEvent<GeometryWorkerReceiveMessage>) => {

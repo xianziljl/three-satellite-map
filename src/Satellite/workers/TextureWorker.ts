@@ -48,26 +48,27 @@ self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
         const blob = await res.blob();
         const bitmap = await createImageBitmap(blob);
 
-        const cxt = currentCanvas.getContext('2d');
-        if (cxt) {
-            const { width, height } = currentCanvas;
-            cxt.drawImage(bitmap, 0, 0, width, height);
+        const ctx = currentCanvas.getContext('2d');
 
-            if (texts != null) {
-                cxt.strokeStyle = '#00ffff';
-                cxt.strokeRect(0, 0, width, height);
+        if (!ctx) throw new Error('Can not get canvas context.');
 
-                cxt.fillStyle = '#00ffff';
-                cxt.font = 'bold 20px arial';
-                texts.forEach((text, i) => {
-                    cxt.fillText(text, 10, (i + 1) * 20);
-                });
-            }
+        const { width, height } = currentCanvas;
+        ctx.drawImage(bitmap, 0, 0, width, height);
+
+        if (texts != null) {
+            ctx.strokeStyle = '#00ffff';
+            ctx.strokeRect(0, 0, width, height);
+
+            ctx.fillStyle = '#00ffff';
+            ctx.font = 'bold 20px arial';
+            texts.forEach((text, i) => {
+                ctx.fillText(text, 10, (i + 1) * 20);
+            });
         }
         postQueue.push(uid);
         requests.delete(uid);
     } catch (e) {
         requests.delete(uid);
-        console.error(e);
+        console.log(e);
     }
 };

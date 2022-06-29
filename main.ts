@@ -59,7 +59,7 @@ const satellite = new Satellite({
     },
     useWorker: true
 });
-satellite.debug = true;
+// satellite.debug = true;
 scene.add(satellite);
 
 window.addEventListener('resize', () => {
@@ -74,8 +74,9 @@ console.log(scene);
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    fog.near = camera.position.z;
-    fog.far = camera.position.z + 1000000;
+
+    fog.near = camera.position.z * 1.5;
+    fog.far = fog.near * 50;
 
     satellite.update(camera);
     renderer.render(scene, camera);

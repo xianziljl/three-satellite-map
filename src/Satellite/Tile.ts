@@ -60,8 +60,8 @@ export class Tile extends Mesh {
         this.canvas.width = this.canvas.height = 256;
         this.texture = new CanvasTexture(this.canvas);
         this.texture.anisotropy = 2;
-        // this.material = new MeshBasicMaterial({ map: this.texture });
-        this.material = new MeshNormalMaterial({ flatShading: true });
+        this.material = new MeshBasicMaterial({ map: this.texture });
+        // this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
     }
 

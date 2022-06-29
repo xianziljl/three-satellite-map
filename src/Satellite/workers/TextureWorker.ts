@@ -6,21 +6,10 @@ const requests = new Map<string, AbortableFetch>([]); // {uid, Fetch}
 const canvasMap = new Map<number, OffscreenCanvas>([]);
 const postQueue: string[] = []; // [uid]
 
-const post = () => {
-    if (postQueue.length) {
-        const uid = postQueue[0];
-        self.postMessage({ uid });
-        postQueue.shift();
-    }
-    setTimeout(post, 16);
-};
-
-post();
 
 self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
     const { id, uid, url, canvas, texts } = e.data;
     try {
-
         // 取消操作
         if (!url) {
             const req = requests.get(uid);
@@ -72,3 +61,15 @@ self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
         console.log(e);
     }
 };
+
+
+const post = () => {
+    if (postQueue.length) {
+        const uid = postQueue[0];
+        self.postMessage({ uid });
+        postQueue.shift();
+    }
+    setTimeout(post, 16);
+};
+
+post();

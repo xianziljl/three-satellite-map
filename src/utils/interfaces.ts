@@ -22,7 +22,9 @@ export interface TextureWorkerReceiveMessage {
 }
 export interface GeometryWorkerReceiveMessage {
     uid: string,
-    position: Float32Array;
+    positions: Float32Array;
+    triangles: Uint32Array,
+    uv: Float32Array;
 };
 
 
@@ -37,6 +39,8 @@ export interface GeometryWorkerPostMessage {
     id: number,
     uid: string,
     level: number,
+    minLevel: number,
+    maxLevel: number,
     row: number,
     col: number,
     zone: number,

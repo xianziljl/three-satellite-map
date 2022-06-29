@@ -1,4 +1,4 @@
-import { Camera, CanvasTexture, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshNormalMaterial, PlaneBufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
 import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../utils/interfaces'
 import { Satellite } from './Satellite';
 import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
@@ -17,7 +17,7 @@ export class Tile extends Mesh {
     // 本次被使用是产生的id
     public uid: string;
     // 材质
-    public material: MeshBasicMaterial;
+    public material: Material;
     // 纹理
     public texture: CanvasTexture;
     // 用作纹理的画布
@@ -48,8 +48,9 @@ export class Tile extends Mesh {
     public bottomRightLonLat: LonLat = { lon: 0, lat: 0 };
     // 当在主线程加载图片时的请求，以便可随时取消请求
     public request: AbortableFetch | null;
-    // 当在 worker 中加载图像时的回调
+    // worker 中图像加载完成时回调
     public onTextureWorkerMessage: (e: MessageEvent<TextureWorkerReceiveMessage>) => void | null;
+    // worker 几何体加载完成回调
     public onGeometryWorkerMessage: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void | null;
 
     constructor(map: Satellite) {
@@ -59,7 +60,8 @@ export class Tile extends Mesh {
         this.canvas.width = this.canvas.height = 256;
         this.texture = new CanvasTexture(this.canvas);
         this.texture.anisotropy = 2;
-        this.material = new MeshBasicMaterial({ map: this.texture });
+        // this.material = new MeshBasicMaterial({ map: this.texture });
+        this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
     }
 
@@ -83,10 +85,6 @@ export class Tile extends Mesh {
 
         if (!Tile.textureWorker) {
             Tile.textureWorker = new TextureWorker();
-            // Tile.textureWorker = new Worker(
-            //     new URL('./workers/Texture.worker.ts', import.meta.url),
-            //     { type: "module" }
-            // );
         }
 
         if (!this.onTextureWorkerMessage) {
@@ -122,25 +120,20 @@ export class Tile extends Mesh {
     public loadGeometryInWorker() {
         if (!Tile.geometryWorker) {
             Tile.geometryWorker = new GeometryWorker();
-            // Tile.geometryWorker = new Worker(
-            //     new URL('./workers/Geometry.worker.ts', import.meta.url),
-            //     { type: "module" }
-            // );
         }
         if (!this.onGeometryWorkerMessage) {
             this.onGeometryWorkerMessage = (e: MessageEvent<GeometryWorkerReceiveMessage>) => {
-                const { uid, position: pos } = e.data
+                const { uid, positions, triangles, uv } = e.data
                 if (uid != this.uid) return;
 
                 Tile.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
-
-                const position = this.geometry.attributes.position;
-                position.setXY(0, pos[0], pos[1]);
-                position.setXY(1, pos[2], pos[3]);
-                position.setXY(2, pos[4], pos[5]);
-                position.setXY(3, pos[6], pos[7]);
+                
+                this.geometry.setIndex(new Uint32BufferAttribute(triangles, 1));
+                this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+                this.geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2));
 
                 this.geometry.attributes.position.needsUpdate = true;
+                this.geometry.attributes.uv.needsUpdate = true;
                 this.geometry.applyMatrix4(this.matrixWorld);
                 this.geometry.computeBoundingBox();
 
@@ -151,8 +144,8 @@ export class Tile extends Mesh {
         
         Tile.geometryWorker.addEventListener('message', this.onGeometryWorkerMessage);
         const { id, uid, level, row, col, map } = this;
-        const { zone, offset } = this.map;
-        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset };
+        const { zone, offset, maxLevel, minLevel } = map;
+        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxLevel, minLevel };
         msg.url = map.terrainResource(level, col, row);
         Tile.geometryWorker.postMessage(msg)
     }

@@ -38,6 +38,8 @@ export function wgs84ToUTM(coord: Coordinate, zone: number, offset?: Coordinate)
     return res;
 }
 
+// export function bitchWgs84ToUTM(coords: Coordinate[])
+
 export function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {
     const controller = new AbortController();
     const { signal } = controller;
@@ -46,4 +48,22 @@ export function abortableFetch(url: string, init: RequestInit = {}): AbortableFe
         abort: () => controller.abort(),
         ready: () => fetch(url, { ...init, signal })
     };
+}
+
+
+export function getQuadrangleGridPositon(
+    topLeft: Coordinate,
+    topRight: Coordinate,
+    bottomLeft: Coordinate,
+    bottomRight: Coordinate,
+    gridX: number,
+    gridY: number,
+    width: number,
+    height: number
+): Coordinate {
+    const percentX = gridX / width;
+    const percentY = gridY / height;
+    const x = (bottomRight.x - topLeft.x) * percentX + topLeft.x;
+    const y = (bottomRight.y - topLeft.y) * percentY + topLeft.y;
+    return { x, y};
 }

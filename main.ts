@@ -1,11 +1,8 @@
-import { AxesHelper, Color, Fog, FogExp2, MeshBasicMaterial, PlaneBufferGeometry, PlaneGeometry, Vector3 } from 'three'
-import { AmbientLight, Mesh, MeshLambertMaterial, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { AxesHelper, DirectionalLight, Fog, Vector3 } from 'three'
+import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
-import { EARTH_PERIMETER } from './src/utils/utils'
 import { Sky } from './src/Scene/Sky';
 import { Satellite } from './src/Satellite/Satellite'
-import { Tile } from './src/Satellite/Tile';
-import { Feature } from 'geojson'
 
 
 const scene = new Scene();
@@ -46,7 +43,8 @@ controls.autoRotate = false;
 controls.panSpeed = 2.5;
 controls.zoomSpeed = 4;
 
-const mapView = new Satellite({
+const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
+const satellite = new Satellite({
     maxLevel: 18,
     minLevel: 6,
     zone: 50,
@@ -54,17 +52,15 @@ const mapView = new Satellite({
     end: { lat: 36.386768, lon: 124.314903 },
     offset: { x: 900000, y: 4300000 },
     satelliteResource: (level: number, x: number, y: number) => {
-        const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
         return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
     },
     terrainResource: (level: number, x: number, y: number) => {
-        const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
-        return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
+        return `https://api.mapbox.com/v4/mapbox.terrain-rgb/${level}/${x}/${y}.pngraw?access_token=${tk}`;
     },
     useWorker: true
 });
-// mapView.debug = true;
-scene.add(mapView);
+satellite.debug = true;
+scene.add(satellite);
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -78,11 +74,10 @@ console.log(scene);
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    fog.near = -camera.position.z * 10;
-    // console.log(fog.near)
-    fog.far = camera.position.z * 50 + 10000;
+    fog.near = camera.position.z;
+    fog.far = camera.position.z + 1000000;
 
-    mapView.update(camera);
+    satellite.update(camera);
     renderer.render(scene, camera);
 }
 animate();

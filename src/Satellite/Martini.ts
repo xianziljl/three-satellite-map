@@ -4,6 +4,7 @@ export class Martini {
     numParentTriangles: number;
     indices: Uint32Array;
     coords: Uint16Array;
+
     constructor(gridSize = 257) {
         this.gridSize = gridSize;
         const tileSize = gridSize - 1;

@@ -2,7 +2,8 @@ import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import webWorkerLoader from "rollup-plugin-web-worker-loader";
-import {liveServer} from 'rollup-plugin-live-server';
+import serve from 'rollup-plugin-serve'
+import livereload from 'rollup-plugin-livereload'
 import cleaner from 'rollup-plugin-cleaner';
 
 
@@ -40,10 +41,8 @@ export default {
             loadPath: 'public',
             // plugins: []
         }),
-        liveServer({
-            root: './',
-            file: 'index.html'
-        })
+        serve(),
+        livereload(),
     ],
     external: id => (/^three/.test(id) || id == 'proj4'),
 }

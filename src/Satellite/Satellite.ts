@@ -1,4 +1,5 @@
-import { Frustum, Matrix4, Object3D, PerspectiveCamera } from 'three';
+import { Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { MapControls } from '../Controls/MapContorls';
 import { LonLat, Coordinate } from '../utils/interfaces'
 import { latToTile, lonToTile } from '../utils/utils';
 import { Tile } from './Tile';
@@ -37,6 +38,10 @@ export class Satellite extends Object3D {
     public tiles: Tile[] = [];
 
     public frame = 0;
+
+    private raycaster = new Raycaster();
+    private raycastOrigin = new Vector3();
+    private raycastDirection = new Vector3(0, 0, -1);
 
     constructor(params: SatelliteParams) {
         super();
@@ -80,7 +85,7 @@ export class Satellite extends Object3D {
         }
     }
 
-    public update(camera: PerspectiveCamera) {
+    public update(camera: PerspectiveCamera, controls?: MapControls) {
         if (!this.visible) return;
         this.frame++;
         if (this.frame % 30 == 0) {
@@ -88,5 +93,24 @@ export class Satellite extends Object3D {
             this.cameraFrustum.setFromProjectionMatrix(this.cameraMatrix4);
             this.tiles.forEach(tile => tile.update(camera));
         }
+        // 修正相机高度
+        const { raycaster, raycastOrigin, raycastDirection } = this;
+        raycastOrigin.set(camera.position.x, camera.position.y, 100000);
+        raycaster.firstHitOnly = true;
+        raycaster.set(raycastOrigin, raycastDirection);
+        const visibleTiles = this.children.filter(child => child.visible);
+        const res = raycaster.intersectObjects(visibleTiles, true)[0];
+        if (res && camera.position.z < res.point.z + 30) {
+            camera.position.z = res.point.z + 30;
+        }
+
+        // if (controls) {
+        //     raycastOrigin.set(controls.target.x, controls.target.y, 100000);
+        //     raycaster.set(raycastOrigin, raycastDirection);
+        //     const res1 = raycaster.intersectObjects(visibleTiles, true)[0];
+        //     if (res1) {
+        //         controls.target.z = res1.point.z;
+        //     }
+        // }
     }
 }

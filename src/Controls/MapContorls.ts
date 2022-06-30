@@ -1,7 +1,7 @@
-import { Camera, MOUSE, TOUCH } from 'three';
+import { Camera, MOUSE, Raycaster, TOUCH, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-export class MapControls extends OrbitControls{
+export class MapControls extends OrbitControls {
     constructor(object: Camera, domElement: HTMLElement) {
         super(object, domElement);
         this.screenSpacePanning = false; // pan orthogonal to world-space direction camera.up
@@ -22,15 +22,5 @@ export class MapControls extends OrbitControls{
         this.autoRotate = false;
         this.panSpeed = 2.5;
         this.zoomSpeed = 4;
-    }
-
-    public fixUpdate(): boolean {
-        const changed = this.update();
-        
-        if (changed) {
-            this.target.z = 1000;
-        }
-
-        return changed;
     }
 }

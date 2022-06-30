@@ -58,7 +58,6 @@ self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
         requests.delete(uid);
     } catch (e) {
         requests.delete(uid);
-        console.log(e);
     }
 };
 

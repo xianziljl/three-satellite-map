@@ -95,7 +95,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             positions[3 * i + 1] = coord.y - offset.y;
 
             if (i > numVerticesWithoutSkirts) {
-                positions[3 * i + 2] = 0;
+                positions[3 * i + 2] = -100;
             } else {
                 positions[3 * i + 2] = terrain[pixelIdx];
             }
@@ -114,7 +114,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         // 加入更新队列
         postQueue.push({ uid, positions, triangles, uv, serializedBVH });
     } catch (e) {
-        console.log(e);
+        requests.delete(uid);
     }
 };
 
@@ -126,7 +126,7 @@ const post = () => {
             data.positions.buffer,
             data.triangles.buffer,
             data.uv.buffer,
-            // data.serialized.index.buffer,
+            data.serializedBVH.index.buffer,
             ...data.serializedBVH.roots
         ]
         // @ts-ignore

@@ -34,6 +34,7 @@ scene.add(ambientLight);
 const controls = new MapControls(camera, renderer.domElement);
 
 const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
+// const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2w1MTJndGgyMDFsMjNqcWkyeDFwNHBqdSJ9.8yY8jQ5yT4HFCWcC6Mf7WQ';
 const satellite = new Satellite({
     maxLevel: 18,
     minLevel: 6,
@@ -64,9 +65,9 @@ console.log(scene);
 function animate() {
     requestAnimationFrame(animate);
 
-    controls.fixUpdate();
+    controls.update();
 
-    satellite.update(camera);
+    satellite.update(camera, controls);
 
     fog.near = camera.position.z * 1.5;
     fog.far = fog.near * 50;

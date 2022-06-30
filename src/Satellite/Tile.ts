@@ -1,4 +1,4 @@
-import { Box3, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
 import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../utils/interfaces';
 import { Satellite } from './Satellite';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
@@ -132,14 +132,15 @@ export class Tile extends Mesh {
 
                 const bvh = MeshBVH.deserialize(serializedBVH, this.geometry, { setIndex: false });
 
-                this.geometry.setIndex(new Uint32BufferAttribute(triangles, 1));
+                // @ts-ignore
+                this.geometry.setIndex(new BufferAttribute(serializedBVH.index, 1, false));
                 this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
                 this.geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2));
 
                 this.geometry.attributes.position.needsUpdate = true;
                 this.geometry.attributes.uv.needsUpdate = true;
                 this.geometry.applyMatrix4(this.matrixWorld);
-                this.geometry.boundingBox = bvh.getBoundingBox(new Box3());
+                this.geometry.computeBoundingBox();
                 this.geometry.boundsTree = bvh;
 
                 this.isGeometryReady = true;

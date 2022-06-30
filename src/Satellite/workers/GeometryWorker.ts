@@ -2,10 +2,12 @@ import proj4 from 'proj4';
 import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage } from '../../utils/interfaces';
 import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../../utils/utils';
 import { Martini } from '../Martini';
+import { BufferAttribute, BufferGeometry, Uint32BufferAttribute } from 'three';
+import { MeshBVH } from 'three-mesh-bvh';
 
 const size = 256;
-const maxError = 120;
-const minError = 10;
+const maxError = 150;
+const minError = 20;
 
 const requests = new Map<string, AbortableFetch>([]); // {uid, Fetch}
 const postQueue: GeometryWorkerReceiveMessage[] = [];
@@ -37,6 +39,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
         if (!ctx) throw new Error('Can not get canvas context.');
 
+        // 获取高程数据
         ctx.drawImage(bitmap, 0, 0, size, size);
         const imgData = ctx.getImageData(0, 0, size, size).data;
         const gridSize = size + 1;
@@ -57,14 +60,14 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         }
 
         const martiniTile = martini.createTile(terrain);
-
         // 计算误差，层级越高，误差越小
         const percent = (level - minLevel) / (maxLevel - minLevel);
         const error = maxError - ((maxError - minError) * percent) - minError;
         const err = error < minError ? minError : error;
-
+        // 生成原始顶点和面信息
         const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(err);
 
+        // 四个角的经纬度
         const topLeftLon = tileToLon(col, level);
         const topLeftLat = tileToLat(row, level);
         const bottomRightLon = tileToLon(col + 1, level);
@@ -77,6 +80,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         const UTM = `+proj=utm +zone= ${zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs `;
         const proj = proj4(WGS84, UTM);
 
+        // 根据生成的顶点和面信息计算几何体的 position 和 uv 信息
         for (let i = 0; i < numOfVertices; i++) {
             const x = vertices[i * 2];
             const y = vertices[i * 2 + 1];
@@ -100,7 +104,15 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             uv[2 * i + 1] = (size - y) / size;
         }
 
-        postQueue.push({ uid, positions, triangles, uv });
+        // 计算分层包围盒
+        const geometry = new BufferGeometry();
+        geometry.setAttribute('position', new BufferAttribute(positions, 3));
+        geometry.setIndex(new Uint32BufferAttribute(triangles, 1, false));
+        const bvh = new MeshBVH(geometry);
+        const serializedBVH = MeshBVH.serialize(bvh, { cloneBuffers: false });
+
+        // 加入更新队列
+        postQueue.push({ uid, positions, triangles, uv, serializedBVH });
     } catch (e) {
         console.log(e);
     }
@@ -109,8 +121,16 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 const post = () => {
     if (postQueue.length) {
         const data = postQueue[0];
+
+        const transferable = [
+            data.positions.buffer,
+            data.triangles.buffer,
+            data.uv.buffer,
+            // data.serialized.index.buffer,
+            ...data.serializedBVH.roots
+        ]
         // @ts-ignore
-        self.postMessage(data, [data.positions.buffer, data.triangles.buffer, data.uv.buffer]);
+        self.postMessage(data, transferable);
         postQueue.shift();
     }
     setTimeout(post, 16.7);

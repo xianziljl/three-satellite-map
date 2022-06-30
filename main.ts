@@ -1,8 +1,8 @@
-import { AxesHelper, DirectionalLight, Fog, Vector3 } from 'three'
+import { AxesHelper, Fog, Vector3 } from 'three';
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
-import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
+import { MapControls } from './src/Controls/MapContorls';
 import { Sky } from './src/Scene/Sky';
-import { Satellite } from './src/Satellite/Satellite'
+import { Satellite } from './src/Satellite/Satellite';
 
 
 const scene = new Scene();
@@ -32,16 +32,6 @@ const ambientLight = new AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
 const controls = new MapControls(camera, renderer.domElement);
-controls.maxPolarAngle = Math.PI / 2.5;
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.screenSpacePanning = false;
-controls.minDistance = 5;
-controls.maxDistance = 1e8 / 4;
-controls.autoRotateSpeed = -0.3;
-controls.autoRotate = false;
-controls.panSpeed = 2.5;
-controls.zoomSpeed = 4;
 
 const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
 const satellite = new Satellite({
@@ -73,12 +63,14 @@ console.log(scene);
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
+
+    controls.fixUpdate();
+
+    satellite.update(camera);
 
     fog.near = camera.position.z * 1.5;
     fog.far = fog.near * 50;
 
-    satellite.update(camera);
     renderer.render(scene, camera);
 }
 animate();

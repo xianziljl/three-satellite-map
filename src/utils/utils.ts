@@ -51,19 +51,3 @@ export function abortableFetch(url: string, init: RequestInit = {}): AbortableFe
 }
 
 
-export function getQuadrangleGridPositon(
-    topLeft: Coordinate,
-    topRight: Coordinate,
-    bottomLeft: Coordinate,
-    bottomRight: Coordinate,
-    gridX: number,
-    gridY: number,
-    width: number,
-    height: number
-): Coordinate {
-    const percentX = gridX / width;
-    const percentY = gridY / height;
-    const x = (bottomRight.x - topLeft.x) * percentX + topLeft.x;
-    const y = (bottomRight.y - topLeft.y) * percentY + topLeft.y;
-    return { x, y};
-}

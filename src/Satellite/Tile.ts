@@ -1,10 +1,9 @@
-import { Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshNormalMaterial, PlaneBufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../utils/interfaces'
+import { Box3, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
+import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../utils/interfaces';
 import { Satellite } from './Satellite';
+import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
 import GeometryWorker from 'web-worker:./workers/GeometryWorker.ts';
-// import proj4 from 'proj4';
-
 
 export class Tile extends Mesh {
     public static VECTOR3 = new Vector3();
@@ -63,6 +62,7 @@ export class Tile extends Mesh {
         this.material = new MeshBasicMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
+        this.raycast = acceleratedRaycast;
     }
 
     public get isReady(): boolean {
@@ -85,6 +85,7 @@ export class Tile extends Mesh {
 
         if (!Tile.textureWorker) {
             Tile.textureWorker = new TextureWorker();
+            // Tile.textureWorker = new Worker(new URL('./workers/TextureWorker.ts', import.meta.url), { type: "module" });
         }
 
         if (!this.onTextureWorkerMessage) {
@@ -97,7 +98,7 @@ export class Tile extends Mesh {
                 this.texture.needsUpdate = true;
                 this.isTextureReady = true;
                 if (this.isReady) this.onload();
-            }
+            };
         }
 
         Tile.textureWorker.addEventListener('message', this.onTextureWorkerMessage);
@@ -120,14 +121,17 @@ export class Tile extends Mesh {
     public loadGeometryInWorker() {
         if (!Tile.geometryWorker) {
             Tile.geometryWorker = new GeometryWorker();
+            // Tile.geometryWorker = new Worker(new URL('./workers/GeometryWorker.ts', import.meta.url), { type: "module" });
         }
         if (!this.onGeometryWorkerMessage) {
             this.onGeometryWorkerMessage = (e: MessageEvent<GeometryWorkerReceiveMessage>) => {
-                const { uid, positions, triangles, uv } = e.data
+                const { uid, positions, triangles, uv, serializedBVH } = e.data;
                 if (uid != this.uid) return;
 
                 Tile.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
-                
+
+                const bvh = MeshBVH.deserialize(serializedBVH, this.geometry, { setIndex: false });
+
                 this.geometry.setIndex(new Uint32BufferAttribute(triangles, 1));
                 this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
                 this.geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2));
@@ -135,19 +139,20 @@ export class Tile extends Mesh {
                 this.geometry.attributes.position.needsUpdate = true;
                 this.geometry.attributes.uv.needsUpdate = true;
                 this.geometry.applyMatrix4(this.matrixWorld);
-                this.geometry.computeBoundingBox();
+                this.geometry.boundingBox = bvh.getBoundingBox(new Box3());
+                this.geometry.boundsTree = bvh;
 
                 this.isGeometryReady = true;
                 if (this.isReady) this.onload();
-            }
+            };
         }
-        
+
         Tile.geometryWorker.addEventListener('message', this.onGeometryWorkerMessage);
         const { id, uid, level, row, col, map } = this;
         const { zone, offset, maxLevel, minLevel } = map;
         const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxLevel, minLevel };
         msg.url = map.terrainResource(level, col, row);
-        Tile.geometryWorker.postMessage(msg)
+        Tile.geometryWorker.postMessage(msg);
     }
     // 细分，在自身就绪的情况下。
     public subdivide(camera: Camera) {
@@ -206,7 +211,7 @@ export class Tile extends Mesh {
 
         childrenTiles.forEach(child => {
             if (child.isReady) readyBrotherCount++;
-        })
+        });
 
         if (readyBrotherCount == 4) {
             parentTile.visible = false;
@@ -224,7 +229,7 @@ export class Tile extends Mesh {
         Tile.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
 
         childrenTiles.forEach(child => child.recycle());
-        
+
 
         this.childrenTiles = [];
         this.parentTile = null;
@@ -241,11 +246,10 @@ export class Tile extends Mesh {
 
         this.isUsing = false;
     }
-
     // 根据相机距离判断细分或者简化
     public update(camera: Camera) {
         const { level, childrenTiles, geometry, isReady, map } = this;
-        
+
         if (!isReady || !geometry.boundingBox) return;
         let distance = geometry.boundingBox.distanceToPoint(camera.position);
         distance /= Math.pow(2, 20 - level);

@@ -1,7 +1,8 @@
+import { SerializedBVH } from 'three-mesh-bvh';
 
 export interface Coordinate {
-    x: number,
-    y: number,
+    x: number;
+    y: number;
     z?: number;
 }
 
@@ -21,29 +22,30 @@ export interface TextureWorkerReceiveMessage {
     uid: string;
 }
 export interface GeometryWorkerReceiveMessage {
-    uid: string,
+    uid: string;
     positions: Float32Array;
-    triangles: Uint32Array,
+    triangles: Uint32Array;
+    serializedBVH: SerializedBVH;
     uv: Float32Array;
 };
 
 
 export interface TextureWorkerPostMessage {
-    id: number,
-    uid: string,
-    url?: string,
-    canvas?: OffscreenCanvas,
+    id: number;
+    uid: string;
+    url?: string;
+    canvas?: OffscreenCanvas;
     texts?: string[];
 };
 export interface GeometryWorkerPostMessage {
-    id: number,
-    uid: string,
-    level: number,
-    minLevel: number,
-    maxLevel: number,
-    row: number,
-    col: number,
-    zone: number,
-    offset: Coordinate,
-    url?: string,
+    id: number;
+    uid: string;
+    level: number;
+    minLevel: number;
+    maxLevel: number;
+    row: number;
+    col: number;
+    zone: number;
+    offset: Coordinate;
+    url?: string;
 }

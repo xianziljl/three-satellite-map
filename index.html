@@ -8,6 +8,22 @@
     <style>body{margin: 0;}</style>
 </head>
 <body>
+    <!-- <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script> -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./node_modules/three/build/three.module.js",
+
+                "three/examples/jsm/controls/OrbitControls": "./node_modules/three/examples/jsm/controls/OrbitControls.js",
+
+                "three/examples/jsm/objects/Sky": "./node_modules/three/examples/jsm/objects/Sky.js",
+
+                "proj4": "https://cdn.jsdelivr.net/npm/proj4@2.8.0/+esm",
+                
+                "three-mesh-bvh": "./node_modules/three-mesh-bvh/build/index.module.js"
+            }
+        }
+    </script>
     <script type="module" async src="./public/main.js"></script>
 </body>
 </html>

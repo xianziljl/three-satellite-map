@@ -61,8 +61,9 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         // 计算误差，层级越高，误差越小
         const percent = (level - minLevel) / (maxLevel - minLevel);
         const error = maxError - ((maxError - minError) * percent) - minError;
+        const err = error < minError ? minError : error;
 
-        const { vertices, triangles } = martiniTile.getMesh(error < minError ? minError: error);
+        const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(err);
 
         const topLeftLon = tileToLon(col, level);
         const topLeftLat = tileToLat(row, level);
@@ -88,7 +89,12 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
             positions[3 * i + 0] = coord.x - offset.x;
             positions[3 * i + 1] = coord.y - offset.y;
-            positions[3 * i + 2] = terrain[pixelIdx];
+
+            if (i > numVerticesWithoutSkirts) {
+                positions[3 * i + 2] = 0;
+            } else {
+                positions[3 * i + 2] = terrain[pixelIdx];
+            }
 
             uv[2 * i + 0] = x / size;
             uv[2 * i + 1] = (size - y) / size;

@@ -113,6 +113,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
         // 加入更新队列
         postQueue.push({ uid, positions, triangles, uv, serializedBVH });
+        requests.delete(uid);
     } catch (e) {
         requests.delete(uid);
     }

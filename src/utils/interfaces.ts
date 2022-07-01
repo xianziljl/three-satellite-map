@@ -16,18 +16,17 @@ export interface AbortableFetch {
     ready: () => Promise<Response>;
 }
 
-
-
 export interface TextureWorkerReceiveMessage {
     uid: string;
 }
+
 export interface GeometryWorkerReceiveMessage {
     uid: string;
     positions: Float32Array;
     triangles: Uint32Array;
     serializedBVH: SerializedBVH;
     uv: Float32Array;
-};
+}
 
 
 export interface TextureWorkerPostMessage {
@@ -36,13 +35,13 @@ export interface TextureWorkerPostMessage {
     url?: string;
     canvas?: OffscreenCanvas;
     texts?: string[];
-};
+}
+
 export interface GeometryWorkerPostMessage {
     id: number;
     uid: string;
     level: number;
-    minLevel: number;
-    maxLevel: number;
+    maxError: number;
     row: number;
     col: number;
     zone: number;

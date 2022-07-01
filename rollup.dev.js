@@ -5,18 +5,16 @@ import webWorkerLoader from "rollup-plugin-web-worker-loader";
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import cleaner from 'rollup-plugin-cleaner';
-// import offMainThread from '@surma/rollup-plugin-off-main-thread';
 
 export default {
     input: 'main.ts',
     format: 'esm',
     output: {
-        dir: 'public',
+        dir: 'temp',
         format: 'esm'
     },
     plugins: [
         cleaner({ targets: ['./public/'] }),
-        // offMainThread(),
         typescript({ target: 'ES2017' }),
         nodeResolve(),
         commonjs(),
@@ -26,7 +24,7 @@ export default {
             extensions: ["ts", "js"],
             external: [],
             preserveFileNames: true,
-            loadPath: 'public'
+            loadPath: 'temp'
         }),
         serve(),
         livereload(),

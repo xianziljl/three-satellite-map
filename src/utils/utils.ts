@@ -38,7 +38,16 @@ export function wgs84ToUTM(coord: Coordinate, zone: number, offset?: Coordinate)
     return res;
 }
 
-// export function bitchWgs84ToUTM(coords: Coordinate[])
+export function bitchWgs84ToUTM(coords: Coordinate[], zone: number, offset = { x: 0, y: 0 }): Coordinate[] {
+    const utm = `+proj=utm +zone= ${zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs `;
+    const proj = proj4(WGS84, utm);
+    return coords.map(coord => {
+        const item = proj.forward(coord);
+        item.x -= offset.x;
+        item.y -= offset.y;
+        return item;
+    })
+}
 
 export function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {
     const controller = new AbortController();

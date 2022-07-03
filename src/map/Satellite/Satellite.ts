@@ -56,6 +56,7 @@ export class Satellite extends Object3D {
         this.satelliteResource = params.satelliteResource;
         this.terrainResource = params.terrainResource;
         this.terrainMaxError = params.terrainMaxError || 10;
+        this.matrixAutoUpdate = false;
 
         setTimeout(() => this.initTiles(), 20);
     }
@@ -77,8 +78,8 @@ export class Satellite extends Object3D {
                 const tile = Tile.getInstance(this);
 
                 tile.init(minLevel, col, row, null);
-                tile.loadTextureInWorker();
-                tile.loadGeometryInWorker();
+                tile.loadTexture();
+                tile.loadGeometry();
 
                 this.tiles.push(tile);
                 this.add(tile);
@@ -95,14 +96,14 @@ export class Satellite extends Object3D {
             this.tiles.forEach(tile => tile.update(camera));
         }
         // 修正相机高度
+        const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
         raycastOrigin.set(camera.position.x, camera.position.y, 100000);
         raycaster.firstHitOnly = true;
         raycaster.set(raycastOrigin, raycastDirection);
-        const visibleTiles = this.children.filter(child => child.visible);
         const res = raycaster.intersectObjects(visibleTiles, true)[0];
-        if (res && camera.position.z < res.point.z + 30) {
-            camera.position.z = res.point.z + 30;
+        if (res && camera.position.z < res.point.z + 5) {
+            camera.position.z = res.point.z + 5;
         }
     }
 }

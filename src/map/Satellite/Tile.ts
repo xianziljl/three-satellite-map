@@ -1,7 +1,8 @@
-import { BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, MeshNormalMaterial, PlaneBufferGeometry, Vector3 } from 'three';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../../utils/interfaces';
+import { BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from '../../utils/interfaces';
 import { Satellite } from './Satellite';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
+import { WorkerPool } from './workers/WorkerPool';
 import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
 import GeometryWorker from 'web-worker:./workers/GeometryWorker.ts';
 
@@ -9,10 +10,14 @@ export class Tile extends Mesh {
     public static VECTOR3 = new Vector3();
     // 对象池
     public static pool: Tile[] = [];
+    
+    public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
+
+    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 2);
     // just worker
-    public static textureWorker: Worker;
+    public textureWorker: Worker;
     // 生成网格的 worker
-    public static geometryWorker: Worker;
+    public geometryWorker: Worker;
     // 本次被使用是产生的id
     public uid: string;
     // 材质
@@ -20,7 +25,7 @@ export class Tile extends Mesh {
     // 纹理
     public texture: CanvasTexture;
     // 用作纹理的画布
-    public canvas: HTMLCanvasElement;
+    public canvas: OffscreenCanvas;
     // Satellite 实例
     public map: Satellite;
     // 是否正在使用，用于回收此对象，避免频繁GC
@@ -45,24 +50,29 @@ export class Tile extends Mesh {
     public topLeftLonLat: LonLat = { lon: 0, lat: 0 };
     // 瓦块右下角经纬度坐标
     public bottomRightLonLat: LonLat = { lon: 0, lat: 0 };
-    // 当在主线程加载图片时的请求，以便可随时取消请求
-    public request: AbortableFetch | null;
-    // worker 中图像加载完成时回调
-    public onTextureWorkerMessage: (e: MessageEvent<TextureWorkerReceiveMessage>) => void | null;
-    // worker 几何体加载完成回调
-    public onGeometryWorkerMessage: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void | null;
+
+    private textureWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
+    private geometryWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
 
     constructor(map: Satellite) {
         super();
         this.map = map;
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = this.canvas.height = 256;
-        this.texture = new CanvasTexture(this.canvas);
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 256;
+        this.canvas = canvas.transferControlToOffscreen();
+
+        this.texture = new CanvasTexture(canvas);
         this.texture.anisotropy = 2;
-        this.material = new MeshBasicMaterial({ map: this.texture });
+        this.material = new MeshStandardMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
         this.raycast = acceleratedRaycast;
+
+        this.textureWorker = Tile.textureWorkerPool.getWorker();
+        this.geometryWorker = Tile.geometryWorkerPool.getWorker();
+
+        this.textureWorkerListener = this.onTextureWorkerMessage.bind(this);
+        this.geometryWorkerListener = this.onGeometryWorkerMessage.bind(this);
     }
 
     public get isReady(): boolean {
@@ -80,28 +90,9 @@ export class Tile extends Mesh {
         this.parentTile = parentTile;
     }
     // 从 worker 中加载瓦片图
-    public loadTextureInWorker() {
+    public loadTexture() {
         const { version, id, uid, level, row, col, map, canvas } = this;
 
-        if (!Tile.textureWorker) {
-            Tile.textureWorker = new TextureWorker();
-            // Tile.textureWorker = new Worker(new URL('./workers/TextureWorker.ts', import.meta.url), { type: "module" });
-        }
-
-        if (!this.onTextureWorkerMessage) {
-            this.onTextureWorkerMessage = (e: MessageEvent<TextureWorkerReceiveMessage>) => {
-                const { uid } = e.data;
-
-                if (uid != this.uid) return;
-
-                Tile.textureWorker.removeEventListener('message', this.onTextureWorkerMessage);
-                this.texture.needsUpdate = true;
-                this.isTextureReady = true;
-                if (this.isReady) this.onload();
-            };
-        }
-
-        Tile.textureWorker.addEventListener('message', this.onTextureWorkerMessage);
         const url = map.satelliteResource(level, col, row);
 
         const msg: TextureWorkerPostMessage = { id, uid, url };
@@ -109,51 +100,61 @@ export class Tile extends Mesh {
             msg.texts = [level + '', col + '', row + ''];
         }
 
+        this.textureWorker.addEventListener('message', this.textureWorkerListener);
         if (version == 0) {
-            const offscreen = canvas.transferControlToOffscreen();
-            msg.canvas = offscreen;
-            Tile.textureWorker.postMessage(msg, [offscreen]);
+            msg.canvas = canvas;
+            this.textureWorker.postMessage(msg, [canvas]);
         } else {
-            Tile.textureWorker.postMessage(msg);
+            this.textureWorker.postMessage(msg);
         }
     }
     // 加载网格
-    public loadGeometryInWorker() {
-        if (!Tile.geometryWorker) {
-            Tile.geometryWorker = new GeometryWorker();
-            // Tile.geometryWorker = new Worker(new URL('./workers/GeometryWorker.ts', import.meta.url), { type: "module" });
-        }
-        if (!this.onGeometryWorkerMessage) {
-            this.onGeometryWorkerMessage = (e: MessageEvent<GeometryWorkerReceiveMessage>) => {
-                const { uid, positions, uv, serializedBVH } = e.data;
-                if (uid != this.uid) return;
-
-                Tile.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
-
-                const bvh = MeshBVH.deserialize(serializedBVH, this.geometry, { setIndex: false });
-
-                // @ts-ignore
-                this.geometry.setIndex(new BufferAttribute(serializedBVH.index, 1, false));
-                this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
-                this.geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2));
-
-                this.geometry.attributes.position.needsUpdate = true;
-                this.geometry.attributes.uv.needsUpdate = true;
-                this.geometry.applyMatrix4(this.matrixWorld);
-                this.geometry.computeBoundingBox();
-                this.geometry.boundsTree = bvh;
-
-                this.isGeometryReady = true;
-                if (this.isReady) this.onload();
-            };
-        }
-
-        Tile.geometryWorker.addEventListener('message', this.onGeometryWorkerMessage);
+    public loadGeometry() {
         const { id, uid, level, row, col, map } = this;
         const { zone, offset, terrainMaxError: maxError } = map;
+
         const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxError };
+
         msg.url = map.terrainResource(level, col, row);
-        Tile.geometryWorker.postMessage(msg);
+
+        this.geometryWorker.addEventListener('message', this.geometryWorkerListener);
+        this.geometryWorker.postMessage(msg);
+    }
+
+    private onTextureWorkerMessage(e: MessageEvent<TextureWorkerReceiveMessage>) {
+        if (e.data.uid != this.uid) return;
+
+        this.textureWorker.removeEventListener('message', this.onTextureWorkerMessage);
+
+        this.texture.needsUpdate = true;
+        this.isTextureReady = true;
+
+        if (this.isReady) this.onload();
+    }
+
+    private onGeometryWorkerMessage(e: MessageEvent<GeometryWorkerReceiveMessage>) {
+        if (e.data.uid != this.uid) return;
+
+        const { positions, uv, normal, serializedBVH } = e.data;
+
+        this.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
+
+        const bvh = MeshBVH.deserialize(serializedBVH, this.geometry, { setIndex: false });
+
+        // @ts-ignore
+        this.geometry.setIndex(new BufferAttribute(serializedBVH.index, 1, false));
+        this.geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+        this.geometry.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+        this.geometry.setAttribute('normal', new Float32BufferAttribute(normal, 3));
+
+        this.geometry.attributes.position.needsUpdate = true;
+        this.geometry.attributes.uv.needsUpdate = true;
+        this.geometry.applyMatrix4(this.matrixWorld);
+        this.geometry.computeBoundingBox();
+        this.geometry.boundsTree = bvh;
+        this.isGeometryReady = true;
+
+        if (this.isReady) this.onload();
     }
     // 细分，在自身就绪的情况下。
     public subdivide(camera: Camera) {
@@ -172,14 +173,14 @@ export class Tile extends Mesh {
         }
 
         const orderChildren = childrenTiles.sort((a, b) => {
-            const distanceA = a.geometry.boundingBox?.distanceToPoint(camera.position) ?? 0;
-            const distanceB = b.geometry.boundingBox?.distanceToPoint(camera.position) ?? 0;
+            const distanceA = a.geometry.boundingBox?.distanceToPoint(camera.position) ?? Infinity;
+            const distanceB = b.geometry.boundingBox?.distanceToPoint(camera.position) ?? Infinity;
             return distanceA - distanceB;
         });
 
         orderChildren.forEach(item => {
-            item.loadGeometryInWorker();
-            item.loadTextureInWorker();
+            item.loadGeometry();
+            item.loadTexture();
         });
     }
     // 简化，在已经细分的情况下
@@ -224,26 +225,19 @@ export class Tile extends Mesh {
     // 2. 销毁 geometry。
     // 3. 取消正在进行的请求（主线程或者通知 woker 线程取消）
     public recycle(): void {
-        const { uid, request, childrenTiles } = this;
+        const { uid, childrenTiles } = this;
 
-        Tile.textureWorker.removeEventListener('message', this.onTextureWorkerMessage);
-        Tile.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
+        this.textureWorker.removeEventListener('message', this.textureWorkerListener);
+        this.geometryWorker.removeEventListener('message', this.geometryWorkerListener);
+        this.textureWorker.postMessage({ uid });
+        this.geometryWorker.postMessage({ uid });
 
         childrenTiles.forEach(child => child.recycle());
-
 
         this.childrenTiles = [];
         this.parentTile = null;
 
         this.map.remove(this);
-
-        if (request) {
-            request.abort();
-            this.request = null;
-        }
-
-        if (Tile.textureWorker) Tile.textureWorker.postMessage({ uid });
-        if (Tile.geometryWorker) Tile.geometryWorker.postMessage({ uid });
 
         this.isUsing = false;
     }
@@ -257,12 +251,12 @@ export class Tile extends Mesh {
 
         const isInFrustum = map.cameraFrustum.intersectsBox(geometry.boundingBox);
 
-        if (distance < 50 && isInFrustum) {
+        if (distance < 60 && isInFrustum) {
             if (!childrenTiles.length) {
                 this.subdivide(camera);
             }
         }
-        if (distance > 55 || !isInFrustum) {
+        if (distance > 80 || !isInFrustum) {
             this.simplify();
         }
         childrenTiles.forEach(child => child.update(camera));

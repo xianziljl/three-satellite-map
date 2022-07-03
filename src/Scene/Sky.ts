@@ -7,6 +7,7 @@ export class Sky extends SkyEffect {
     private isNight = false;
     constructor() {
         super();
+        this.geometry.rotateX(Math.PI / 2);
         this.scale.setScalar(EARTH_PERIMETER);
         this.update();
     }

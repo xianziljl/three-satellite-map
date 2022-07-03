@@ -26,6 +26,7 @@ export interface GeometryWorkerReceiveMessage {
     triangles: Uint32Array;
     serializedBVH: SerializedBVH;
     uv: Float32Array;
+    normal: Float32Array;
 }
 
 

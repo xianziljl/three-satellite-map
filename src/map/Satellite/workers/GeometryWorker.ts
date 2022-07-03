@@ -90,7 +90,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             positions[3 * i + 1] = coord.y - offset.y;
 
             if (i > numVerticesWithoutSkirts) {
-                positions[3 * i + 2] = -100;
+                positions[3 * i + 2] = terrain[pixelIdx] - 200;
             } else {
                 positions[3 * i + 2] = terrain[pixelIdx];
             }
@@ -103,11 +103,14 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         const geometry = new BufferGeometry();
         geometry.setAttribute('position', new BufferAttribute(positions, 3));
         geometry.setIndex(new Uint32BufferAttribute(triangles, 1, false));
+        geometry.computeVertexNormals();
+        const normal = geometry.getAttribute('normal').array as Float32Array;
+
         const bvh = new MeshBVH(geometry);
         const serializedBVH = MeshBVH.serialize(bvh, { cloneBuffers: false });
 
         // 加入更新队列
-        postQueue.push({ uid, positions, triangles, uv, serializedBVH });
+        postQueue.push({ uid, positions, triangles, uv, normal, serializedBVH });
         requests.delete(uid);
     } catch (e) {
         requests.delete(uid);
@@ -122,6 +125,7 @@ const post = () => {
             data.positions.buffer,
             data.triangles.buffer,
             data.uv.buffer,
+            data.normal.buffer,
             data.serializedBVH.index.buffer,
             ...data.serializedBVH.roots
         ]
@@ -129,7 +133,7 @@ const post = () => {
         self.postMessage(data, transferable);
         postQueue.shift();
     }
-    setTimeout(post, 16.7);
+    requestAnimationFrame(post);
 };
 
 post();

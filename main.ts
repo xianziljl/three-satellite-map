@@ -5,6 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { MapControls } from './src/Controls/MapContorls';
 import { Satellite } from './src/map';
 import { Sky } from './src/Scene/Sky';
+import Stats from 'three/examples/jsm/libs/stats.module';
+import { Tile } from './src/map/Satellite/Tile';
 
 
 const scene = new Scene();
@@ -34,6 +36,7 @@ const ambientLight = new AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
 const controls = new MapControls(camera, renderer.domElement);
+controls.target.z = 30;
 
 const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
 // const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2w1MTJndGgyMDFsMjNqcWkyeDFwNHBqdSJ9.8yY8jQ5yT4HFCWcC6Mf7WQ';
@@ -47,8 +50,8 @@ const satellite = new Satellite({
     end: { lat: 36.386768, lon: 124.314903 },
     offset,
     satelliteResource: (level: number, x: number, y: number) => {
-        // return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
-        return `https://mts1.google.com/vt/lyrs=s&hl=zh-CN&x=${x}&y=${y}&z=${level}`;
+        return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
+        // return `https://mts1.google.com/vt/lyrs=s&hl=zh-CN&x=${x}&y=${y}&z=${level}`;
     },
     terrainResource: (level: number, x: number, y: number) => {
         return `https://api.mapbox.com/v4/mapbox.terrain-rgb/${level}/${x}/${y}.pngraw?access_token=${tk}`;
@@ -57,15 +60,18 @@ const satellite = new Satellite({
 // satellite.debug = true;
 scene.add(satellite);
 
-const loader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('/node_modules/three/examples/js/libs/draco/');
-loader.setDRACOLoader(dracoLoader);
-loader.load('/assets/models/010533.glb', gltf => {
-    console.log(gltf);
-    gltf.scene.position.set(553653.64 - offset.x, 4397931.07 - offset.y, 10);
-    scene.add(gltf.scene);
-});
+// const loader = new GLTFLoader();
+// const dracoLoader = new DRACOLoader();
+// dracoLoader.setDecoderPath('/node_modules/three/examples/js/libs/draco/');
+// loader.setDRACOLoader(dracoLoader);
+// loader.load('/assets/models/010533.glb', gltf => {
+//     console.log(gltf);
+//     gltf.scene.position.set(553653.64 - offset.x, 4397931.07 - offset.y, 40);
+//     scene.add(gltf.scene);
+// });
+
+const stats = new (Stats as any)();
+document.body.appendChild(stats.dom);
 
 
 window.addEventListener('resize', () => {
@@ -76,6 +82,10 @@ window.addEventListener('resize', () => {
 
 console.log(scene);
 
+const verticesEl = document.getElementById('vertices');
+const geometriesEl = document.getElementById('geometries');
+const texturesEl = document.getElementById('textures');
+const drawcallsEl = document.getElementById('drawcalls');
 
 function animate() {
     requestAnimationFrame(animate);
@@ -83,12 +93,26 @@ function animate() {
     controls.update();
 
     satellite.update(camera);
-    camera.far = camera.position.z * 100 + 10000;
+    camera.far = camera.position.z * 50
     camera.updateProjectionMatrix();
 
-    fog.far = camera.far;
+    fog.far = camera.far * 0.9;
 
     renderer.render(scene, camera);
+
+    const vertices = satellite.children.reduce((sum, cur) => {
+        const tile = cur as Tile;
+        if (tile.visible) {
+            sum += tile.geometry.attributes.position.count;
+        }
+        return sum;
+    }, 0)
+    if (verticesEl) verticesEl.innerText = vertices.toLocaleString();
+    if (geometriesEl) geometriesEl.innerText = renderer.info.memory.geometries.toLocaleString();
+    if (texturesEl) texturesEl.innerText = renderer.info.memory.textures.toLocaleString();
+    if (drawcallsEl) drawcallsEl.innerText = renderer.info.render.calls.toLocaleString();
+
+    stats.update();
 }
 animate();
 

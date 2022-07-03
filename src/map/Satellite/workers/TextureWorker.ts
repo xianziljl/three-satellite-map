@@ -68,7 +68,7 @@ const post = () => {
         self.postMessage({ uid });
         postQueue.shift();
     }
-    setTimeout(post, 16);
+    requestAnimationFrame(post);
 };
 
 post();

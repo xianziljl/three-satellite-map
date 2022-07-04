@@ -1,9 +1,9 @@
 import proj4 from 'proj4';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage } from '../../../utils/interfaces';
+import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TerrainFixGeometry, TerrainFixMesh, TerrainFixMode } from '../../../utils/interfaces';
 import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../../../utils/utils';
 import { Martini } from '../Martini';
-import { BufferAttribute, BufferGeometry, Uint32BufferAttribute } from 'three';
-import { MeshBVH } from 'three-mesh-bvh';
+import { BufferAttribute, BufferGeometry, DoubleSide, Mesh, MeshBasicMaterial, Ray, Raycaster, Uint32BufferAttribute, Vector3 } from 'three';
+import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 
 const size = 256;
 
@@ -14,12 +14,35 @@ const ctx = canvas.getContext('2d');
 const terrain = new Float32Array((size + 1) * (size + 1));
 const martini = new Martini();
 
+let fixMeshs: TerrainFixMesh[];
+const fixMtl = new MeshBasicMaterial({ side: DoubleSide });
+const ray = new Raycaster();
+ray.firstHitOnly = true;
+const rayOrigin = new Vector3();
+const rayUp = new Vector3(0, 0, 1);
+const rayDown = new Vector3(0, 0, -1);
+
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
     const { init, uid, url, level, maxError, row, col, zone, offset, terrainFixGeometrys } = e.data;
 
     if (init && terrainFixGeometrys) {
-        console.log(terrainFixGeometrys);
+        fixMeshs = terrainFixGeometrys.map(item => {
+            const geometry = new BufferGeometry();
+            const { position, uv, normal } = item.geometry.attributes;
+            geometry.setIndex(new BufferAttribute(item.geometry.index?.array ?? [], 1, false))
+            geometry.setAttribute('position', new BufferAttribute(position.array, 3));
+            geometry.setAttribute('normal', new BufferAttribute(normal.array, 3));
+            geometry.setAttribute('uv', new BufferAttribute(uv.array, 2));
+            geometry.computeVertexNormals();
+            const mesh = new Mesh(geometry, fixMtl);
+            mesh.raycast = acceleratedRaycast;
+            mesh.geometry.boundsTree = new MeshBVH(mesh.geometry);
+            return {
+                mesh,
+                mode: item.mode
+            }
+        });
         return;
     }
 
@@ -29,7 +52,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             if (req) req.abort();
             requests.delete(uid);
             postQueue.forEach((item, i) => {
-                if (item.uid == uid) postQueue.splice(i, 1);
+                if (item.uid === uid) postQueue.splice(i, 1);
             });
             return;
         }
@@ -91,18 +114,53 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
             const coord = proj.forward({ x: lon, y: lat });
 
-            positions[3 * i + 0] = coord.x - offset.x;
-            positions[3 * i + 1] = coord.y - offset.y;
+            let vx = coord.x - offset.x;
+            let vy = coord.y - offset.y;
+            let vz = terrain[pixelIdx];
 
-            if (i > numVerticesWithoutSkirts) {
-                positions[3 * i + 2] = terrain[pixelIdx] - 200;
+            positions[3 * i + 0] = vx;
+            positions[3 * i + 1] = vy;
+
+            rayOrigin.x = vx;
+            rayOrigin.y = vy;
+            rayOrigin.z = vz;
+            
+            if (fixMeshs && fixMeshs.length) {
+                fixMeshs.forEach(item => {
+                    if (item.mode === TerrainFixMode.DOWN) {
+                        ray.set(rayOrigin, rayDown);
+                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
+                        if (res) vz = res.point.z;
+                        return;
+                    }
+                    if (item.mode === TerrainFixMode.UP) {
+                        ray.set(rayOrigin, rayUp);
+                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
+                        if (res) vz = res.point.z;
+                        return;
+                    }
+                    if (item.mode == TerrainFixMode.MATCH) {
+                        rayOrigin.z = -1e8;
+                        ray.set(rayOrigin, rayUp);
+                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
+                        if (res) vz = res.point.z;
+                    }
+                    
+                })
+            }
+
+
+            if (i >= numVerticesWithoutSkirts) {
+                positions[3 * i + 2] = vz - 200;
             } else {
-                positions[3 * i + 2] = terrain[pixelIdx];
+                positions[3 * i + 2] = vz;
             }
 
             uv[2 * i + 0] = x / size;
             uv[2 * i + 1] = (size - y) / size;
         }
+
+        // console.log(positions);
 
         // 计算分层包围盒
         const geometry = new BufferGeometry();

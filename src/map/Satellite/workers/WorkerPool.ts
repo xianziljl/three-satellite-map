@@ -17,13 +17,13 @@ export class WorkerPool {
      * @returns Worker
      */
 
-    public getWorker(initMessage?: any): Worker {
+    public getWorker(initMessage?: any, transferableObjects?: any[]): Worker {
         const { workers, useTimes, size } = this;
 
         if (workers.length < size) {
             const worker = new this.factory();
             if (initMessage) {
-                worker.postMessage(initMessage);
+                worker.postMessage(initMessage, transferableObjects);
             }
             useTimes[workers.length] = 1;
             workers.push(worker);

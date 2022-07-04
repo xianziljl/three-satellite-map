@@ -16,7 +16,7 @@ self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
             if (req) req.abort();
             requests.delete(uid);
             postQueue.forEach((qid, i) => {
-                if (qid == uid) postQueue.splice(i, 1);
+                if (qid === uid) postQueue.splice(i, 1);
             });
             return;
         }

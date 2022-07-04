@@ -29,5 +29,5 @@ export default {
         serve(),
         livereload(),
     ],
-    external: id => (/^three/.test(id) || id == 'proj4'),
+    external: id => (/^three/.test(id) || id === 'proj4'),
 };

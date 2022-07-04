@@ -1,4 +1,4 @@
-import { BufferGeometry } from 'three';
+import { BufferGeometry, Mesh } from 'three';
 import { SerializedBVH } from 'three-mesh-bvh';
 
 export interface Coordinate {
@@ -63,6 +63,10 @@ export enum TerrainFixMode {
 export interface TerrainFixGeometry {
     mode: TerrainFixMode,
     geometry: BufferGeometry;
+};
+export interface TerrainFixMesh {
+    mode: TerrainFixMode,
+    mesh: Mesh;
 };
 
 export type TileRerource = (level: number, x: number, y: number) => string;

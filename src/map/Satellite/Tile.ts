@@ -13,7 +13,7 @@ export class Tile extends Mesh {
     
     public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
 
-    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 2);
+    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 4);
     // just worker
     public textureWorker: Worker;
     // 生成网格的 worker
@@ -113,7 +113,7 @@ export class Tile extends Mesh {
         }
 
         this.textureWorker.addEventListener('message', this.textureWorkerListener);
-        if (version == 0) {
+        if (version === 0) {
             msg.canvas = canvas;
             this.textureWorker.postMessage(msg, [canvas]);
         } else {
@@ -144,7 +144,7 @@ export class Tile extends Mesh {
     private onTextureWorkerMessage(e: MessageEvent<TextureWorkerReceiveMessage>) {
         if (e.data.uid != this.uid) return;
 
-        this.textureWorker.removeEventListener('message', this.onTextureWorkerMessage);
+        this.textureWorker.removeEventListener('message', this.textureWorkerListener);
 
         this.texture.needsUpdate = true;
         this.isTextureReady = true;
@@ -252,7 +252,7 @@ export class Tile extends Mesh {
             if (child.isReady) readyBrotherCount++;
         });
 
-        if (readyBrotherCount == 4) {
+        if (readyBrotherCount === 4) {
             parentTile.visible = false;
             childrenTiles.forEach(child => child.visible = true);
         }

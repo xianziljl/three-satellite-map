@@ -20,5 +20,5 @@ export default {
             external: [],
         })
     ],
-    external: id => (/^three/.test(id) || id == 'proj4'),
+    external: id => (/^three/.test(id) || id === 'proj4'),
 };

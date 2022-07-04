@@ -1,4 +1,4 @@
-import { AxesHelper, Fog, Vector3 } from 'three';
+import { AxesHelper, Fog, Shape, Vector3 } from 'three';
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -7,6 +7,7 @@ import { Satellite } from './src/map';
 import { Sky } from './src/Scene/Sky';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { Tile } from './src/map/Satellite/Tile';
+import { wgs84ToUTM } from './src/utils/utils';
 
 
 const scene = new Scene();
@@ -81,6 +82,21 @@ window.addEventListener('resize', () => {
 });
 
 console.log(scene);
+
+const coords = [
+    [40.580606, 118.708785],
+    [40.551213, 118.921512],
+    [40.438225, 118.711173],
+    [40.425961, 118.941934]
+].map(item => wgs84ToUTM({ x: item[1], y: item[0] }, 50, offset));
+const shape = new Shape();
+shape.moveTo(coords[0].x, coords[0].y);
+for (let i = 1; i < coords.length; i++) {
+    shape.lineTo(coords[i].x, coords[i].y);
+}
+shape.lineTo(coords[0].x, coords[0].y);
+
+
 
 const verticesEl = document.getElementById('vertices');
 const geometriesEl = document.getElementById('geometries');

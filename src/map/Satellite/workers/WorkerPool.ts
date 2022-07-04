@@ -11,11 +11,20 @@ export class WorkerPool {
         this.factory = factory;
     }
 
-    public getWorker(): Worker {
+    /**
+     * 从池中获取一个 worker，池中没有时将会创建，每个 worker 被使用的次数时均匀的。
+     * @param initMessage 创建 worker 时需要给传递给 worker 的初始化信息。
+     * @returns Worker
+     */
+
+    public getWorker(initMessage?: any): Worker {
         const { workers, useTimes, size } = this;
 
         if (workers.length < size) {
             const worker = new this.factory();
+            if (initMessage) {
+                worker.postMessage(initMessage);
+            }
             useTimes[workers.length] = 1;
             workers.push(worker);
             return worker;

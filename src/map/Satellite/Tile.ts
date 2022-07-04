@@ -69,7 +69,9 @@ export class Tile extends Mesh {
         this.raycast = acceleratedRaycast;
 
         this.textureWorker = Tile.textureWorkerPool.getWorker();
-        this.geometryWorker = Tile.geometryWorkerPool.getWorker();
+        const { terrainFixGeometrys } = map;
+        const initMessage = terrainFixGeometrys ? { init: true, terrainFixGeometrys } : null;
+        this.geometryWorker = Tile.geometryWorkerPool.getWorker(initMessage);
 
         this.textureWorkerListener = this.onTextureWorkerMessage.bind(this);
         this.geometryWorkerListener = this.onGeometryWorkerMessage.bind(this);
@@ -79,6 +81,13 @@ export class Tile extends Mesh {
         return this.isGeometryReady && this.isTextureReady;
     }
 
+    /**
+     * 初始化，Tile 被创建后，或复用时执行。
+     * @param level 层级
+     * @param col 瓦片列
+     * @param row 瓦片行
+     * @param parentTile 父亲 
+     */
     public init(level: number, col: number, row: number, parentTile: Tile | null) {
         this.visible = false;
         this.isGeometryReady = false;
@@ -89,7 +98,10 @@ export class Tile extends Mesh {
         this.uid = `${this.id}-${level}-${row}-${col}`;
         this.parentTile = parentTile;
     }
-    // 从 worker 中加载瓦片图
+
+    /**
+     * 从 worker 中加载瓦片图。
+     */
     public loadTexture() {
         const { version, id, uid, level, row, col, map, canvas } = this;
 
@@ -108,12 +120,15 @@ export class Tile extends Mesh {
             this.textureWorker.postMessage(msg);
         }
     }
-    // 加载网格
+    
+    /**
+     * 从 worker 中加载并生成地形网格。
+     */
     public loadGeometry() {
         const { id, uid, level, row, col, map } = this;
         const { zone, offset, terrainMaxError: maxError } = map;
 
-        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxError };
+        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxError, init: false };
 
         msg.url = map.terrainResource(level, col, row);
 
@@ -121,6 +136,11 @@ export class Tile extends Mesh {
         this.geometryWorker.postMessage(msg);
     }
 
+    /**
+     * 卫星图在 worker 中加载完成后的回调。
+     * @param e 仅包含 uid，卫星图已在 worker 线程中被绘制到 canvas 上。
+     * @returns 
+     */
     private onTextureWorkerMessage(e: MessageEvent<TextureWorkerReceiveMessage>) {
         if (e.data.uid != this.uid) return;
 
@@ -132,6 +152,11 @@ export class Tile extends Mesh {
         if (this.isReady) this.onload();
     }
 
+    /**
+     * 地形网格 worker 中加载完成后的回调。
+     * @param e 包含顶点，uv，法线，分层包围盒信息，用以重建 geometry。
+     * @returns
+     */
     private onGeometryWorkerMessage(e: MessageEvent<GeometryWorkerReceiveMessage>) {
         if (e.data.uid != this.uid) return;
 
@@ -156,7 +181,12 @@ export class Tile extends Mesh {
 
         if (this.isReady) this.onload();
     }
-    // 细分，在自身就绪的情况下。
+    
+    /**
+     * 瓦片细分
+     * @param camera 相机，用以排序细分顺序。
+     * @returns 
+     */
     public subdivide(camera: Camera) {
         const { childrenTiles, map, level, isReady, visible } = this;
 
@@ -183,7 +213,11 @@ export class Tile extends Mesh {
             item.loadTexture();
         });
     }
-    // 简化，在已经细分的情况下
+    
+    /**
+     * 简化，在已经细分的情况下
+     * @returns 
+     */
     public simplify() {
         const { childrenTiles } = this;
         if (!childrenTiles.length) return;
@@ -192,11 +226,14 @@ export class Tile extends Mesh {
 
         this.childrenTiles = [];
         this.visible = true;
-        // this.center.visible = true;
     }
-    // 瓦片加载完成时执行：
-    // 1. 生成 geometry。
-    // 2. 在兄弟节点全部就绪时隐藏父节点，显示兄弟节点。
+    
+    /**
+     * 瓦片加载完成时执行：
+     * 1. 生成 geometry。
+     * 2. 在兄弟节点全部就绪时隐藏父节点，显示兄弟节点。
+     * @returns 
+     */
     private onload() {
         this.map.add(this);
 
@@ -220,10 +257,12 @@ export class Tile extends Mesh {
             childrenTiles.forEach(child => child.visible = true);
         }
     }
-    // 回收对象
-    // 1. 从场景中移除自身和中心。
-    // 2. 销毁 geometry。
-    // 3. 取消正在进行的请求（主线程或者通知 woker 线程取消）
+
+    /**
+     * 回收对象
+     * 1. 从场景中移除自身和中心。
+     * 2. 取消正在进行的请求（主线程或者通知 woker 线程取消）
+     */
     public recycle(): void {
         const { uid, childrenTiles } = this;
 
@@ -241,7 +280,12 @@ export class Tile extends Mesh {
 
         this.isUsing = false;
     }
-    // 根据相机距离判断细分或者简化
+    
+    /**
+     * 根据相机距离判断细分或者简化。
+     * @param camera 相机。
+     * @returns 
+     */
     public update(camera: Camera) {
         const { level, childrenTiles, geometry, isReady, map } = this;
 
@@ -262,7 +306,11 @@ export class Tile extends Mesh {
         childrenTiles.forEach(child => child.update(camera));
     }
 
-    // 从对象池中获取实例
+    /**
+     * 从对象池中获取实例
+     * @param map 当前的地图对象
+     * @returns Tile
+     */
     public static getInstance(map: Satellite): Tile {
         let tile = Tile.pool.find(item => !item.isUsing);
         if (tile) {

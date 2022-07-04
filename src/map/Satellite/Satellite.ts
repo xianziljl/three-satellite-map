@@ -1,26 +1,26 @@
-import { Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
-import { LonLat, Coordinate } from '../../utils/interfaces'
+import { BufferGeometry, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from '../../utils/interfaces';
 import { latToTile, lonToTile } from '../../utils/utils';
 import { Tile } from './Tile';
 
-type TileRerource = (level: number, x: number, y: number) => string;
+
 
 export interface SatelliteParams {
     start: LonLat,
     end: LonLat,
     zone: number,
     maxLevel: number,
-    minLevel: number
+    minLevel: number;
     satelliteResource: TileRerource,
     terrainResource: TileRerource,
     offset?: Coordinate;
     terrainMaxError?: number;
+    terrainFixGeometrys?: TerrainFixGeometry[];
 }
 
 export class Satellite extends Object3D {
 
     public debug = false;
-    public useWorker = false;
 
     public cameraFrustum = new Frustum();
     private cameraMatrix4 = new Matrix4();
@@ -31,10 +31,13 @@ export class Satellite extends Object3D {
     public end: LonLat;
     public zone: number;
     public offset: Coordinate;
-    
+
     public satelliteResource: TileRerource;
     public terrainResource: TileRerource;
     public terrainMaxError: number;
+    terrainFixGeometrys?: TerrainFixGeometry[];
+
+    // public 
 
     public tiles: Tile[] = [];
 
@@ -56,6 +59,7 @@ export class Satellite extends Object3D {
         this.satelliteResource = params.satelliteResource;
         this.terrainResource = params.terrainResource;
         this.terrainMaxError = params.terrainMaxError || 10;
+        this.terrainFixGeometrys = params.terrainFixGeometrys;
         this.matrixAutoUpdate = false;
 
         setTimeout(() => this.initTiles(), 20);

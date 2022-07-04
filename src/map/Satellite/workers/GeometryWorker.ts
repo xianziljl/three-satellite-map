@@ -16,7 +16,12 @@ const martini = new Martini();
 
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
-    const { id, uid, url, level, maxError, row, col, zone, offset } = e.data;
+    const { init, uid, url, level, maxError, row, col, zone, offset, terrainFixGeometrys } = e.data;
+
+    if (init && terrainFixGeometrys) {
+        console.log(terrainFixGeometrys);
+        return;
+    }
 
     try {
         if (!url) {

@@ -1,3 +1,4 @@
+import { BufferGeometry } from 'three';
 import { SerializedBVH } from 'three-mesh-bvh';
 
 export interface Coordinate {
@@ -39,6 +40,7 @@ export interface TextureWorkerPostMessage {
 }
 
 export interface GeometryWorkerPostMessage {
+    init: boolean;
     id: number;
     uid: string;
     level: number;
@@ -48,4 +50,19 @@ export interface GeometryWorkerPostMessage {
     zone: number;
     offset: Coordinate;
     url?: string;
+    terrainFixGeometrys?: TerrainFixGeometry[];
 }
+
+
+export enum TerrainFixMode {
+    UP = 1,
+    DOWN = 2,
+    MATCH = 3
+}
+
+export interface TerrainFixGeometry {
+    mode: TerrainFixMode,
+    geometry: BufferGeometry;
+};
+
+export type TileRerource = (level: number, x: number, y: number) => string;

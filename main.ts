@@ -81,6 +81,10 @@ const satellite = new Satellite({
     start: { lat: 42.423176, lon: 113.889034 },
     end: { lat: 36.386768, lon: 124.314903 },
     offset,
+    terrainFixGeometrys: [{
+        geometry: shapeGeometry.clone(),
+        mode: TerrainFixMode.MATCH
+    }],
     satelliteResource: (level: number, x: number, y: number) => {
         // return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
         return `https://mts1.google.com/vt/lyrs=s&hl=zh-CN&x=${x}&y=${y}&z=${level}`;
@@ -88,12 +92,8 @@ const satellite = new Satellite({
     terrainResource: (level: number, x: number, y: number) => {
         return `https://api.mapbox.com/v4/mapbox.terrain-rgb/${level}/${x}/${y}.pngraw?access_token=${tk}`;
     },
-    terrainFixGeometrys: [{
-        geometry: shapeGeometry.clone(),
-        mode: TerrainFixMode.MATCH
-    }]
 });
-// satellite.debug = true;
+
 scene.add(satellite);
 
 
@@ -124,7 +124,7 @@ function animate() {
     controls.update();
 
     satellite.update(camera);
-    const far = camera.position.z * 50
+    const far = camera.position.z * 50;
     camera.far = far + 5000;
     camera.updateProjectionMatrix();
 

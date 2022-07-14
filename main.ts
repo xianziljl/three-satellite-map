@@ -61,7 +61,7 @@ const coordstr = '119.3385985569207,39.93522579805809,36.23722945228651 119.3260
 const coords = coordstr.split(' ').map(item => {
     const arr = item.split(',').map(n => parseFloat(n));
     return wgs84ToUTM({ x: arr[0], y: arr[1] }, 50, offset);
-})
+});
 const shape = new Shape();
 shape.moveTo(coords[0].x, coords[0].y);
 for (let i = 1; i < coords.length; i++) {
@@ -91,7 +91,7 @@ const satellite = new Satellite({
     terrainFixGeometrys: [{
         geometry: shapeGeometry.clone(),
         mode: TerrainFixMode.MATCH
-    }] 
+    }]
 });
 // satellite.debug = true;
 scene.add(satellite);
@@ -124,10 +124,11 @@ function animate() {
     controls.update();
 
     satellite.update(camera);
-    camera.far = camera.position.z * 50
+    const far = camera.position.z * 50
+    camera.far = far + 5000;
     camera.updateProjectionMatrix();
 
-    fog.far = camera.far * 0.9;
+    fog.far = far;
 
     renderer.render(scene, camera);
 
@@ -137,7 +138,7 @@ function animate() {
             sum += tile.geometry.attributes.position.count;
         }
         return sum;
-    }, 0)
+    }, 0);
     if (verticesEl) verticesEl.innerText = vertices.toLocaleString();
     if (geometriesEl) geometriesEl.innerText = renderer.info.memory.geometries.toLocaleString();
     if (texturesEl) texturesEl.innerText = renderer.info.memory.textures.toLocaleString();

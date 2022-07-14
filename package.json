@@ -1,7 +1,7 @@
 {
   "name": "terrain-visual-map",
   "version": "1.0.0",
-  "description": "satellite for threejs.",
+  "description": "satellite map for threejs.",
   "main": "index.js",
   "scripts": {
     "dev": "rollup -c rollup.dev.js --watch",

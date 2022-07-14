@@ -1,6 +1,14 @@
 import { AbortableFetch, TextureWorkerPostMessage } from '../../../utils/interfaces';
-import { abortableFetch } from '../../../utils/utils';
 
+function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    return {
+        abort: () => controller.abort(),
+        ready: () => fetch(url, { ...init, signal })
+    };
+}
 
 const requests = new Map<string, AbortableFetch>([]); // {uid, Fetch}
 const canvasMap = new Map<number, OffscreenCanvas>([]);

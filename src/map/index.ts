@@ -1,1 +1,0 @@
-export { Satellite } from './Satellite/Satellite';

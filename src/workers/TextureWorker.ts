@@ -1,4 +1,4 @@
-import { AbortableFetch, TextureWorkerPostMessage } from '../../../utils/interfaces';
+import { AbortableFetch, TextureWorkerPostMessage } from '../utils/interfaces';
 
 function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {
     const controller = new AbortController();

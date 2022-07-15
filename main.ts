@@ -1,14 +1,13 @@
-import { AxesHelper, Fog, Mesh, MeshBasicMaterial, Shape, ShapeBufferGeometry, Vector3 } from 'three';
+import { AxesHelper, Fog, MathUtils, Mesh, MeshBasicMaterial, MOUSE, Shape, ShapeBufferGeometry, TOUCH, Vector3 } from 'three';
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { MapControls } from './src/Controls/MapContorls';
-import { Satellite } from './src/map';
-import { Sky } from './src/Scene/Sky';
-import Stats from 'three/examples/jsm/libs/stats.module';
-import { Tile } from './src/map/Satellite/Tile';
-import { wgs84ToUTM } from './src/utils/utils';
+import { EARTH_PERIMETER, wgs84ToUTM } from './src/utils/utils';
 import { TerrainFixMode } from './src/utils/interfaces';
+import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
+import { Sky } from 'three/examples/jsm/objects/Sky';
+import { Satellite, Tile } from './src';
+import Stats from 'three/examples/jsm/libs/stats.module';
 
 
 const scene = new Scene();
@@ -29,6 +28,17 @@ camera.position.set(0, 0, 100000);
 camera.lookAt(0, 0, 0);
 
 const sky = new Sky();
+sky.scale.setScalar(EARTH_PERIMETER);
+const uniforms = sky.material.uniforms;
+uniforms['turbidity'].value = 2.5;
+uniforms['rayleigh'].value = 0.1;
+uniforms['mieCoefficient'].value = 0;
+uniforms['mieDirectionalG'].value = 0.7;
+const phi = MathUtils.degToRad(90 - 45);
+const theta = MathUtils.degToRad(180);
+const sun = new Vector3();
+sun.setFromSphericalCoords(1, phi, theta);
+uniforms['sunPosition'].value.copy(sun);
 scene.add(sky);
 
 const helper = new AxesHelper(100000);
@@ -38,6 +48,17 @@ const ambientLight = new AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
 const controls = new MapControls(camera, renderer.domElement);
+controls.screenSpacePanning = false; // pan orthogonal to world-space direction camera.up
+controls.maxPolarAngle = Math.PI / 2.5;
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.screenSpacePanning = false;
+controls.minDistance = 5;
+controls.maxDistance = 1e8 / 4;
+controls.autoRotateSpeed = -0.3;
+controls.autoRotate = false;
+controls.panSpeed = 2.5;
+controls.zoomSpeed = 4;
 controls.target.z = 40;
 
 

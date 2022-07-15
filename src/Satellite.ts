@@ -1,6 +1,6 @@
 import { BufferGeometry, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
-import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from '../../utils/interfaces';
-import { latToTile, lonToTile } from '../../utils/utils';
+import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
+import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
 
 

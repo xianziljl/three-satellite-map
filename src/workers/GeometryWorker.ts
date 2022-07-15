@@ -1,8 +1,8 @@
 import proj4 from 'proj4';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TerrainFixGeometry, TerrainFixMesh, TerrainFixMode } from '../../../utils/interfaces';
-import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../../../utils/utils';
+import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TerrainFixMesh, TerrainFixMode } from '../utils/interfaces';
+import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../utils/utils';
 import { Martini } from '../Martini';
-import { BufferAttribute, BufferGeometry, DoubleSide, Mesh, MeshBasicMaterial, Ray, Raycaster, Uint32BufferAttribute, Vector3 } from 'three';
+import { BufferAttribute, BufferGeometry, DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Uint32BufferAttribute, Vector3 } from 'three';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 
 const size = 256;

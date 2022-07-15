@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import webWorkerLoader from "rollup-plugin-web-worker-loader";
 
 export default {
-    input: 'src/Satellite/Satellite.ts',
+    input: 'src/index.ts',
     output: {
         dir: 'dist',
         format: 'esm',

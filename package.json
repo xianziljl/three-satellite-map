@@ -1,5 +1,5 @@
 {
-  "name": "three-satellite-terrain-map",
+  "name": "three-terrain-satellite-map",
   "version": "1.0.0",
   "description": "satellite map for threejs.",
   "main": "index.js",

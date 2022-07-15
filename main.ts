@@ -6,7 +6,7 @@ import { EARTH_PERIMETER, wgs84ToUTM } from './src/utils/utils';
 import { TerrainFixMode } from './src/utils/interfaces';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Sky } from 'three/examples/jsm/objects/Sky';
-import { Satellite, Tile } from './src';
+import { SatelliteMap, Tile } from './src';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
 
@@ -95,7 +95,7 @@ shapeGeometry.translate(0, 0, 38);
 
 // const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
 const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2w1MTJndGgyMDFsMjNqcWkyeDFwNHBqdSJ9.8yY8jQ5yT4HFCWcC6Mf7WQ';
-const satellite = new Satellite({
+const satelliteMap = new SatelliteMap({
     maxLevel: 18,
     minLevel: 6,
     zone: 50,
@@ -115,7 +115,7 @@ const satellite = new Satellite({
     },
 });
 
-scene.add(satellite);
+scene.add(satelliteMap);
 
 
 
@@ -144,7 +144,7 @@ function animate() {
 
     controls.update();
 
-    satellite.update(camera);
+    satelliteMap.update(camera);
     const far = camera.position.z * 50;
     camera.far = far + 5000;
     camera.updateProjectionMatrix();
@@ -153,7 +153,7 @@ function animate() {
 
     renderer.render(scene, camera);
 
-    const vertices = satellite.children.reduce((sum, cur) => {
+    const vertices = satelliteMap.children.reduce((sum, cur) => {
         const tile = cur as Tile;
         if (tile.visible) {
             sum += tile.geometry.attributes.position.count;

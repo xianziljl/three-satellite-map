@@ -1,6 +1,6 @@
 import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
-import { Satellite } from './Satellite';
+import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 import { WorkerPool } from './workers/WorkerPool';
 import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
@@ -27,7 +27,7 @@ export class Tile extends Mesh {
     // 用作纹理的画布
     public canvas: OffscreenCanvas;
     // Satellite 实例
-    public map: Satellite;
+    public map: SatelliteMap;
     // 是否正在使用，用于回收此对象，避免频繁GC
     public isUsing: boolean = false;
     // 父瓦块
@@ -54,7 +54,7 @@ export class Tile extends Mesh {
     private textureWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
     private geometryWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
 
-    constructor(map: Satellite) {
+    constructor(map: SatelliteMap) {
         super();
         this.map = map;
         const canvas = document.createElement('canvas');
@@ -311,7 +311,7 @@ export class Tile extends Mesh {
      * @param map 当前的地图对象
      * @returns Tile
      */
-    public static getInstance(map: Satellite): Tile {
+    public static getInstance(map: SatelliteMap): Tile {
         let tile = Tile.pool.find(item => !item.isUsing);
         if (tile) {
             tile.version++;

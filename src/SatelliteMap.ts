@@ -1,4 +1,4 @@
-import { BufferGeometry, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
 import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
@@ -18,7 +18,7 @@ export interface SatelliteParams {
     terrainFixGeometrys?: TerrainFixGeometry[];
 }
 
-export class Satellite extends Object3D {
+export class SatelliteMap extends Object3D {
 
     public debug = false;
 

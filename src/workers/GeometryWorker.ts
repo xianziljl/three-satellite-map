@@ -19,8 +19,8 @@ const fixMtl = new MeshBasicMaterial({ side: DoubleSide });
 const ray = new Raycaster();
 ray.firstHitOnly = true;
 const rayOrigin = new Vector3();
-const rayUp = new Vector3(0, 0, 1);
-const rayDown = new Vector3(0, 0, -1);
+const rayUp = new Vector3(0, 1, 0);
+const rayDown = new Vector3(0, -1, 0);
 
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
@@ -115,11 +115,11 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             const coord = proj.forward({ x: lon, y: lat });
 
             let vx = coord.x - offset.x;
-            let vy = coord.y - offset.y;
-            let vz = terrain[pixelIdx];
+            let vy = terrain[pixelIdx];
+            let vz = -(coord.y - offset.y);
 
             positions[3 * i + 0] = vx;
-            positions[3 * i + 1] = vy;
+            positions[3 * i + 2] = vz;
 
             rayOrigin.x = vx;
             rayOrigin.y = vy;
@@ -129,21 +129,21 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
                 fixMeshs.forEach(item => {
                     if (item.mode === TerrainFixMode.DOWN) {
                         ray.set(rayOrigin, rayDown);
-                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
-                        if (res) vz = res.point.z;
+                        const res = ray.intersectObject(item.mesh, false)[0];
+                        if (res) vy = res.point.y;
                         return;
                     }
                     if (item.mode === TerrainFixMode.UP) {
                         ray.set(rayOrigin, rayUp);
-                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
-                        if (res) vz = res.point.z;
+                        const res = ray.intersectObject(item.mesh, false)[0];
+                        if (res) vy = res.point.y;
                         return;
                     }
                     if (item.mode == TerrainFixMode.MATCH) {
-                        rayOrigin.z = -1e8;
+                        rayOrigin.y = -1e8;
                         ray.set(rayOrigin, rayUp);
-                        const res = ray.intersectObject(fixMeshs[0].mesh, false)[0];
-                        if (res) vz = res.point.z;
+                        const res = ray.intersectObject(item.mesh, false)[0];
+                        if (res) vy = res.point.y;
                     }
                     
                 })
@@ -151,9 +151,9 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
 
             if (i >= numVerticesWithoutSkirts) {
-                positions[3 * i + 2] = vz - 200;
+                positions[3 * i + 1] = vy - 200;
             } else {
-                positions[3 * i + 2] = vz;
+                positions[3 * i + 1] = vy;
             }
 
             uv[2 * i + 0] = x / size;

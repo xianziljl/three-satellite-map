@@ -3,8 +3,6 @@ import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/in
 import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
 
-
-
 export interface SatelliteParams {
     start: LonLat,
     end: LonLat,
@@ -45,7 +43,7 @@ export class SatelliteMap extends Object3D {
 
     private raycaster = new Raycaster();
     private raycastOrigin = new Vector3();
-    private raycastDirection = new Vector3(0, 0, -1);
+    private raycastDirection = new Vector3(0, -1, 0);
 
     constructor(params: SatelliteParams) {
         super();
@@ -102,12 +100,12 @@ export class SatelliteMap extends Object3D {
         // 修正相机高度
         const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
-        raycastOrigin.set(camera.position.x, camera.position.y, 100000);
+        raycastOrigin.set(camera.position.x, 100000, camera.position.z);
         raycaster.firstHitOnly = true;
         raycaster.set(raycastOrigin, raycastDirection);
         const res = raycaster.intersectObjects(visibleTiles, true)[0];
-        if (res && camera.position.z < res.point.z + 5) {
-            camera.position.z = res.point.z + 5;
+        if (res && camera.position.y < res.point.y + 5) {
+            camera.position.y = res.point.y + 5;
         }
     }
 }

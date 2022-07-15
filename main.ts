@@ -1,4 +1,4 @@
-import { AxesHelper, Fog, MathUtils, Mesh, MeshBasicMaterial, MOUSE, Shape, ShapeBufferGeometry, TOUCH, Vector3 } from 'three';
+import { AxesHelper, DoubleSide, Fog, MathUtils, Mesh, MeshBasicMaterial, MOUSE, Shape, ShapeBufferGeometry, TOUCH, Vector3 } from 'three';
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -23,8 +23,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1e7);
-camera.up = new Vector3(0, 0, 1);
-camera.position.set(0, 0, 100000);
+// camera.up = new Vector3(0, 0, 1);
+camera.position.set(0, 100000, 0);
 camera.lookAt(0, 0, 0);
 
 const sky = new Sky();
@@ -59,7 +59,7 @@ controls.autoRotateSpeed = -0.3;
 controls.autoRotate = false;
 controls.panSpeed = 2.5;
 controls.zoomSpeed = 4;
-controls.target.z = 40;
+controls.target.y = 40;
 
 
 
@@ -90,7 +90,12 @@ for (let i = 1; i < coords.length; i++) {
 }
 shape.lineTo(coords[0].x, coords[0].y);
 const shapeGeometry = new ShapeBufferGeometry(shape);
-shapeGeometry.translate(0, 0, 38);
+shapeGeometry.rotateX(-Math.PI / 2);
+shapeGeometry.translate(0, 38, 0);
+
+// const shapeMesh = new Mesh(shapeGeometry, new MeshBasicMaterial({ color: 0xff0000 }));
+
+// scene.add(shapeMesh)
 
 
 // const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
@@ -145,7 +150,7 @@ function animate() {
     controls.update();
 
     satelliteMap.update(camera);
-    const far = camera.position.z * 50;
+    const far = camera.position.y * 50;
     camera.far = far + 5000;
     camera.updateProjectionMatrix();
 

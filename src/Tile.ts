@@ -1,5 +1,5 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
-import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, LonLat, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
+import { BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 import { WorkerPool } from './workers/WorkerPool';
@@ -46,10 +46,6 @@ export class Tile extends Mesh {
     public row: number;
     // 当前瓦块列
     public col: number;
-    // 瓦块左上角经纬度坐标
-    public topLeftLonLat: LonLat = { lon: 0, lat: 0 };
-    // 瓦块右下角经纬度坐标
-    public bottomRightLonLat: LonLat = { lon: 0, lat: 0 };
 
     private textureWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
     private geometryWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;

@@ -139,7 +139,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
                         if (res) vy = res.point.y;
                         return;
                     }
-                    if (item.mode == TerrainFixMode.MATCH) {
+                    if (item.mode === TerrainFixMode.MATCH) {
                         rayOrigin.y = -1e8;
                         ray.set(rayOrigin, rayUp);
                         const res = ray.intersectObject(item.mesh, false)[0];

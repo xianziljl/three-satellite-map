@@ -2,7 +2,9 @@
   "name": "three-terrain-satellite-map",
   "version": "1.0.0",
   "description": "satellite map for threejs.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "typings": "dist/typings.d.ts",
   "scripts": {
     "dev": "rollup -c rollup.dev.js --watch",
     "build": "rollup -c rollup.config.js",

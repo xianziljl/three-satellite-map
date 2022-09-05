@@ -19,7 +19,7 @@ const elevationFixes: ElevationFix[] = [];
 
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
-    const { init, uid, url, level, maxError, row, col, zone, offset, terrainFixGeometrys } = e.data;
+    const { init, uid, url, level, maxError, row, col, zone, terrainFixGeometrys } = e.data;
 
     if (init && terrainFixGeometrys) {
         terrainFixGeometrys.forEach(item => {
@@ -103,9 +103,9 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
             const coord = proj.forward({ x: lon, y: lat });
 
-            let vx = coord.x - offset.x;
+            let vx = coord.x;
             let vy = terrain[pixelIdx];
-            let vz = -(coord.y - offset.y);
+            let vz = -coord.y;
 
             elevationFixes.forEach(item => vy = item.fix(vx, vy, vz));
 
@@ -122,13 +122,20 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         geometry.setAttribute('position', new BufferAttribute(positions, 3));
         geometry.setIndex(new Uint32BufferAttribute(triangles, 1, false));
         geometry.computeVertexNormals();
-        const normal = geometry.getAttribute('normal').array as Float32Array;
+        geometry.computeBoundingBox();
 
+        const center = new Vector3();
+        if (geometry.boundingBox) {
+            geometry.boundingBox.getCenter(center);
+            geometry.translate(-center.x, -center.y, -center.z);
+        }
+
+        const normal = geometry.getAttribute('normal').array as Float32Array;
         const bvh = new MeshBVH(geometry);
         const serializedBVH = MeshBVH.serialize(bvh, { cloneBuffers: false });
 
         // 加入更新队列
-        postQueue.push({ uid, positions, triangles, uv, normal, serializedBVH });
+        postQueue.push({ uid, positions, triangles, uv, normal, serializedBVH, center });
     } finally {
         requests.delete(uid);
     }

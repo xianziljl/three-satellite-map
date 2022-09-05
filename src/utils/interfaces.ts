@@ -1,4 +1,4 @@
-import { BufferGeometry, Mesh } from 'three';
+import { BufferGeometry, Mesh, Vector3 } from 'three';
 import { SerializedBVH } from 'three-mesh-bvh';
 
 export interface Coordinate {
@@ -28,6 +28,7 @@ export interface GeometryWorkerReceiveMessage {
     serializedBVH: SerializedBVH;
     uv: Float32Array;
     normal: Float32Array;
+    center: Vector3;
 }
 
 
@@ -48,7 +49,6 @@ export interface GeometryWorkerPostMessage {
     row: number;
     col: number;
     zone: number;
-    offset: Coordinate;
     url?: string;
     terrainFixGeometrys?: TerrainFixGeometry[];
 }

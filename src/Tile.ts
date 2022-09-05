@@ -126,9 +126,9 @@ export class Tile extends Mesh {
      */
     public loadGeometry() {
         const { id, uid, level, row, col, map } = this;
-        const { zone, offset, terrainMaxError: maxError } = map;
+        const { zone, terrainMaxError: maxError } = map;
 
-        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, offset, maxError, init: false };
+        const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, maxError, init: false };
 
         msg.url = map.terrainResource(level, col, row);
 
@@ -160,7 +160,9 @@ export class Tile extends Mesh {
     private onGeometryWorkerMessage(e: MessageEvent<GeometryWorkerReceiveMessage>) {
         if (e.data.uid != this.uid) return;
 
-        const { positions, uv, normal, serializedBVH } = e.data;
+        const { positions, uv, normal, serializedBVH, center } = e.data;
+
+        this.position.set(center.x, center.y, center.z);
 
         this.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
 

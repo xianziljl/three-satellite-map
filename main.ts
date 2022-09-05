@@ -11,7 +11,7 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 
 
-const offset = { x: 671037.0, y: 4524163 };
+// const offset = { x: 671037.0, y: 4524163 };
 const scene = new Scene();
 // scene.position.set(-offset.x, 0, offset.y);
 const fog = new Fog(0x6caeff, 0, Infinity);
@@ -107,7 +107,6 @@ const satelliteMap = new SatelliteMap({
     zone: 50,
     start: { lat: 42.423176, lon: 113.889034 },
     end: { lat: 36.386768, lon: 124.314903 },
-    // offset,
     terrainFixGeometrys: [{
         geometry: shapeGeometry.clone(),
         mode: TerrainFixMode.DOWN

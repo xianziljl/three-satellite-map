@@ -29,7 +29,6 @@ export class SatelliteMap extends Object3D {
     public start: LonLat;
     public end: LonLat;
     public zone: number;
-    public offset: Coordinate;
 
     public satelliteResource: TileRerource;
     public terrainResource: TileRerource;
@@ -52,7 +51,6 @@ export class SatelliteMap extends Object3D {
         this.zone = params.zone;
         this.start = params.start;
         this.end = params.end;
-        this.offset = params.offset ?? { x: 0, y: 0 };
         this.satelliteResource = params.satelliteResource;
         this.terrainResource = params.terrainResource;
         this.terrainMaxError = params.terrainMaxError || 5;

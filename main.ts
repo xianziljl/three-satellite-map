@@ -122,7 +122,7 @@ const satelliteMap = new SatelliteMap({
 });
 
 // satelliteMap.rotation.x = Math.PI / 2;
-satelliteMap.debug = true;
+// satelliteMap.debug = true;
 scene.add(satelliteMap);
 console.log(satelliteMap);
 

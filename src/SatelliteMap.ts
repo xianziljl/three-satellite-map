@@ -108,7 +108,6 @@ export class SatelliteMap extends Object3D {
 
     public startLoadQueue(camera: Camera) {
         if (this.loadQueue.length) {
-            console.log(this.loadQueue.length);
             const ordered = this.loadQueue.sort((a, b) => {
                 const distanceA = a.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
                 const distanceB = b.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
@@ -120,6 +119,21 @@ export class SatelliteMap extends Object3D {
                 item.loadTexture();
             });
             this.loadQueue = [];
+        }
+    }
+
+    public addToLoadQueue(tiles: Tile[]) {
+        this.loadQueue.push(...tiles);
+    }
+
+    public removeFromLoadQueue(tile: Tile) {
+        const { loadQueue } = this;
+        const len = loadQueue.length;
+        for (let i = 0; i < len; i++) {
+            if (loadQueue[i] === tile) {
+                loadQueue.splice(i, 1);
+                break;
+            }
         }
     }
 

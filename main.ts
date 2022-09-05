@@ -25,7 +25,7 @@ const renderer = new WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1e7);
+const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 5, 1e7);
 // camera.up = new Vector3(0, 0, 1);
 camera.position.set(0, 100000, 0);
 camera.lookAt(0, 0, 0);
@@ -121,7 +121,7 @@ const satelliteMap = new SatelliteMap({
 });
 
 // satelliteMap.rotation.x = Math.PI / 2;
-// satelliteMap.debug = true;
+satelliteMap.debug = false;
 scene.add(satelliteMap);
 console.log(satelliteMap);
 

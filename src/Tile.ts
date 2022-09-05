@@ -163,7 +163,9 @@ export class Tile extends Mesh {
 
         const { positions, uv, normal, serializedBVH, center } = e.data;
 
-        this.position.set(center.x, center.y, center.z);
+        // 消除平面地形时的 z-fighting.
+        const y = center.y + 0.001 * (this.level - this.map.minLevel);
+        this.position.set(center.x, y, center.z);
 
         this.geometryWorker.removeEventListener('message', this.onGeometryWorkerMessage);
 
@@ -214,7 +216,7 @@ export class Tile extends Mesh {
             }
         }
 
-        map.loadQueue.push(...this.childrenTiles);
+        map.addToLoadQueue(this.childrenTiles);
     }
     
     /**
@@ -277,6 +279,7 @@ export class Tile extends Mesh {
         this.parentTile = null;
 
         this.map.remove(this);
+        this.map.removeFromLoadQueue(this);
 
         this.isUsing = false;
     }

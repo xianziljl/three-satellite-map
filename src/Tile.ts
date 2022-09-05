@@ -15,7 +15,7 @@ export class Tile extends Mesh {
     
     public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
 
-    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 2);
+    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 4);
     // just worker
     public textureWorker: Worker;
     // 生成网格的 worker

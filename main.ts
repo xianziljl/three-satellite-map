@@ -166,7 +166,12 @@ function animate() {
         return sum;
     }, 0);
     if (verticesEl) verticesEl.innerText = vertices.toLocaleString();
-    if (geometriesEl) geometriesEl.innerText = renderer.info.memory.geometries.toLocaleString();
+    // renderer.info.memory.geometries.toLocaleString();
+    if (geometriesEl) {
+        const visibleCount = satelliteMap.children.filter(item => item.visible).length;
+        const totalCount = satelliteMap.children.length;
+        geometriesEl.innerText = visibleCount + " / " + totalCount;
+    }
     if (texturesEl) texturesEl.innerText = renderer.info.memory.textures.toLocaleString();
     if (drawcallsEl) drawcallsEl.innerText = renderer.info.render.calls.toLocaleString();
 

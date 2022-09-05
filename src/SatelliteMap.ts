@@ -36,13 +36,10 @@ export class SatelliteMap extends Object3D {
     public terrainMaxError: number;
     public terrainFixGeometrys?: TerrainFixGeometry[];
 
-    // public 
-
     public tiles: Tile[] = [];
     public loadQueue: Tile[] = [];
 
-    public frame = 0;
-
+    private frame = 0;
     private raycaster = new Raycaster();
     private raycastOrigin = new Vector3();
     private raycastDirection = new Vector3(0, -1, 0);
@@ -60,7 +57,6 @@ export class SatelliteMap extends Object3D {
         this.terrainResource = params.terrainResource;
         this.terrainMaxError = params.terrainMaxError || 5;
         this.terrainFixGeometrys = params.terrainFixGeometrys;
-        this.matrixAutoUpdate = false;
 
         setTimeout(() => this.initTiles(), 50);
     }

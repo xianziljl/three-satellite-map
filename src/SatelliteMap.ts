@@ -1,7 +1,8 @@
-import { Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { BufferGeometry, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
 import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
+import { computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 
 export interface SatelliteParams {
     start: LonLat,
@@ -56,7 +57,7 @@ export class SatelliteMap extends Object3D {
         this.offset = params.offset ?? { x: 0, y: 0 };
         this.satelliteResource = params.satelliteResource;
         this.terrainResource = params.terrainResource;
-        this.terrainMaxError = params.terrainMaxError || 10;
+        this.terrainMaxError = params.terrainMaxError || 5;
         this.terrainFixGeometrys = params.terrainFixGeometrys;
         this.matrixAutoUpdate = false;
 

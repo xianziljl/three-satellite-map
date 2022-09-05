@@ -1,9 +1,10 @@
 import proj4 from 'proj4';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TerrainFixMesh, TerrainFixMode } from '../utils/interfaces';
+import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage } from '../utils/interfaces';
 import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../utils/utils';
 import { Martini } from '../Martini';
-import { BufferAttribute, BufferGeometry, DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Uint32BufferAttribute, Vector3 } from 'three';
-import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
+import { BufferAttribute, BufferGeometry, Uint32BufferAttribute } from 'three';
+import { MeshBVH } from 'three-mesh-bvh';
+import { ElevationFix } from '../ElevationFix';
 
 const size = 256;
 
@@ -14,20 +15,14 @@ const ctx = canvas.getContext('2d');
 const terrain = new Float32Array((size + 1) * (size + 1));
 const martini = new Martini();
 
-let fixMeshs: TerrainFixMesh[];
-const fixMtl = new MeshBasicMaterial({ side: DoubleSide });
-const ray = new Raycaster();
-ray.firstHitOnly = true;
-const rayOrigin = new Vector3();
-const rayUp = new Vector3(0, 1, 0);
-const rayDown = new Vector3(0, -1, 0);
+const elevationFixes: ElevationFix[] = [];
 
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
     const { init, uid, url, level, maxError, row, col, zone, offset, terrainFixGeometrys } = e.data;
 
     if (init && terrainFixGeometrys) {
-        fixMeshs = terrainFixGeometrys.map(item => {
+        terrainFixGeometrys.forEach(item => {
             const geometry = new BufferGeometry();
             const { position, uv, normal } = item.geometry.attributes;
             geometry.setIndex(new BufferAttribute(item.geometry.index?.array ?? [], 1, false))
@@ -35,14 +30,8 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             geometry.setAttribute('normal', new BufferAttribute(normal.array, 3));
             geometry.setAttribute('uv', new BufferAttribute(uv.array, 2));
             geometry.computeVertexNormals();
-            const mesh = new Mesh(geometry, fixMtl);
-            mesh.raycast = acceleratedRaycast;
-            mesh.geometry.boundsTree = new MeshBVH(mesh.geometry);
-            return {
-                mesh,
-                mode: item.mode
-            }
-        });
+            elevationFixes.push(new ElevationFix(geometry, item.mode));
+        })
         return;
     }
 
@@ -118,49 +107,15 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             let vy = terrain[pixelIdx];
             let vz = -(coord.y - offset.y);
 
+            elevationFixes.forEach(item => vy = item.fix(vx, vy, vz));
+
             positions[3 * i + 0] = vx;
+            positions[3 * i + 1] = i >= numVerticesWithoutSkirts ? (vy - 200) : vy;
             positions[3 * i + 2] = vz;
-
-            rayOrigin.x = vx;
-            rayOrigin.y = vy;
-            rayOrigin.z = vz;
-            
-            if (fixMeshs && fixMeshs.length) {
-                fixMeshs.forEach(item => {
-                    if (item.mode === TerrainFixMode.DOWN) {
-                        ray.set(rayOrigin, rayDown);
-                        const res = ray.intersectObject(item.mesh, false)[0];
-                        if (res) vy = res.point.y;
-                        return;
-                    }
-                    if (item.mode === TerrainFixMode.UP) {
-                        ray.set(rayOrigin, rayUp);
-                        const res = ray.intersectObject(item.mesh, false)[0];
-                        if (res) vy = res.point.y;
-                        return;
-                    }
-                    if (item.mode === TerrainFixMode.MATCH) {
-                        rayOrigin.y = -1e8;
-                        ray.set(rayOrigin, rayUp);
-                        const res = ray.intersectObject(item.mesh, false)[0];
-                        if (res) vy = res.point.y;
-                    }
-                    
-                })
-            }
-
-
-            if (i >= numVerticesWithoutSkirts) {
-                positions[3 * i + 1] = vy - 200;
-            } else {
-                positions[3 * i + 1] = vy;
-            }
 
             uv[2 * i + 0] = x / size;
             uv[2 * i + 1] = (size - y) / size;
         }
-
-        // console.log(positions);
 
         // 计算分层包围盒
         const geometry = new BufferGeometry();
@@ -174,8 +129,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
         // 加入更新队列
         postQueue.push({ uid, positions, triangles, uv, normal, serializedBVH });
-        requests.delete(uid);
-    } catch (e) {
+    } finally {
         requests.delete(uid);
     }
 };

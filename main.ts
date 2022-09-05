@@ -10,7 +10,10 @@ import { SatelliteMap, Tile } from './src';
 import Stats from 'three/examples/jsm/libs/stats.module';
 
 
+
+const offset = { x: 671037.0, y: 4524163 };
 const scene = new Scene();
+// scene.position.set(offset.x, 0, offset.y);
 const fog = new Fog(0x6caeff, 0, Infinity);
 scene.fog = fog;
 // scene.background = new Color(0x54b7ff);
@@ -63,8 +66,6 @@ controls.target.y = 40;
 
 
 
-const offset = { x: 671037.0, y: 4524163 };
-
 
 
 const loader = new GLTFLoader();
@@ -93,9 +94,9 @@ const shapeGeometry = new ShapeBufferGeometry(shape);
 shapeGeometry.rotateX(-Math.PI / 2);
 shapeGeometry.translate(0, 38, 0);
 
-// const shapeMesh = new Mesh(shapeGeometry, new MeshBasicMaterial({ color: 0xff0000 }));
+const shapeMesh = new Mesh(shapeGeometry, new MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 }));
 
-// scene.add(shapeMesh)
+scene.add(shapeMesh)
 
 
 // const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2tiajQzYWQwMGxidDJycWluemE5bXB3dyJ9.sOQJSMtlL0xP27Dp6fvRyw';
@@ -106,10 +107,10 @@ const satelliteMap = new SatelliteMap({
     zone: 50,
     start: { lat: 42.423176, lon: 113.889034 },
     end: { lat: 36.386768, lon: 124.314903 },
-    offset,
+    // offset,
     terrainFixGeometrys: [{
         geometry: shapeGeometry.clone(),
-        mode: TerrainFixMode.MATCH
+        mode: TerrainFixMode.DOWN
     }],
     satelliteResource: (level: number, x: number, y: number) => {
         // return `https://api.mapbox.com/v4/mapbox.satellite/${level}/${x}/${y}.jpg70?access_token=${tk}`;
@@ -119,6 +120,7 @@ const satelliteMap = new SatelliteMap({
         return `https://api.mapbox.com/v4/mapbox.terrain-rgb/${level}/${x}/${y}.pngraw?access_token=${tk}`;
     },
 });
+
 
 scene.add(satelliteMap);
 

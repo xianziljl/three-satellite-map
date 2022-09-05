@@ -1,4 +1,4 @@
-import { BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
@@ -174,8 +174,10 @@ export class Tile extends Mesh {
 
         this.geometry.computeBoundingBox();
         this.geometry.computeBoundingSphere();
-
         this.geometry.boundsTree = bvh;
+
+        // this.boundingBoxWorld.setFromObject(this);
+        
         this.isGeometryReady = true;
 
         if (this.isReady) this.onload();
@@ -289,6 +291,7 @@ export class Tile extends Mesh {
         const { level, childrenTiles, geometry, isReady, map } = this;
 
         if (!isReady || !geometry.boundingBox) return;
+        // boundingBoxWorld.applyMatrix4(camera.matrixWorld);
         let distance = geometry.boundingBox.distanceToPoint(camera.position);
         distance /= Math.pow(2, 20 - level);
 

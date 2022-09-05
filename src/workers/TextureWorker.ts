@@ -63,8 +63,7 @@ self.onmessage = async (e: MessageEvent<TextureWorkerPostMessage>) => {
             });
         }
         postQueue.push(uid);
-        requests.delete(uid);
-    } catch (e) {
+    } finally {
         requests.delete(uid);
     }
 };

@@ -64,9 +64,5 @@ export interface TerrainFixGeometry {
     mode: TerrainFixMode,
     geometry: BufferGeometry;
 };
-export interface TerrainFixMesh {
-    mode: TerrainFixMode,
-    mesh: Mesh;
-};
 
 export type TileRerource = (level: number, x: number, y: number) => string;

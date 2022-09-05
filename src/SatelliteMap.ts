@@ -1,4 +1,4 @@
-import { BufferGeometry, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { BufferGeometry, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
 import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
@@ -34,11 +34,12 @@ export class SatelliteMap extends Object3D {
     public satelliteResource: TileRerource;
     public terrainResource: TileRerource;
     public terrainMaxError: number;
-    terrainFixGeometrys?: TerrainFixGeometry[];
+    public terrainFixGeometrys?: TerrainFixGeometry[];
 
     // public 
 
     public tiles: Tile[] = [];
+    public loadQueue: Tile[] = [];
 
     public frame = 0;
 
@@ -61,7 +62,7 @@ export class SatelliteMap extends Object3D {
         this.terrainFixGeometrys = params.terrainFixGeometrys;
         this.matrixAutoUpdate = false;
 
-        setTimeout(() => this.initTiles(), 20);
+        setTimeout(() => this.initTiles(), 50);
     }
 
     private initTiles(): void {
@@ -93,12 +94,15 @@ export class SatelliteMap extends Object3D {
     public update(camera: PerspectiveCamera) {
         if (!this.visible) return;
         this.frame++;
-        if (this.frame % 10 === 0) {
+        if (this.frame == 10) {
             this.cameraMatrix4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
             this.cameraFrustum.setFromProjectionMatrix(this.cameraMatrix4);
             this.tiles.forEach(tile => tile.update(camera));
+            this.startLoadQueue(camera);
+            this.frame = 0;
         }
         // 修正相机高度
+        // TODO: 修正时应考虑是否为世界坐标
         const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
         raycastOrigin.set(camera.position.x, 100000, camera.position.z);
@@ -107,6 +111,23 @@ export class SatelliteMap extends Object3D {
         const res = raycaster.intersectObjects(visibleTiles, true)[0];
         if (res && camera.position.y < res.point.y + 5) {
             camera.position.y = res.point.y + 5;
+        }
+    }
+
+    public startLoadQueue(camera: Camera) {
+        if (this.loadQueue.length) {
+            console.log(this.loadQueue.length);
+            const ordered = this.loadQueue.sort((a, b) => {
+                const distanceA = a.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
+                const distanceB = b.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
+                return distanceA - distanceB;
+            });
+
+            ordered.forEach(item => {
+                item.loadGeometry();
+                item.loadTexture();
+            });
+            this.loadQueue = [];
         }
     }
 }

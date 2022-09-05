@@ -1,4 +1,4 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
@@ -10,10 +10,12 @@ export class Tile extends Mesh {
     public static VECTOR3 = new Vector3();
     // 对象池
     public static pool: Tile[] = [];
+
+    public static loadQueue: Tile[] = [];
     
     public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
 
-    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 4);
+    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 2);
     // just worker
     public textureWorker: Worker;
     // 生成网格的 worker
@@ -46,6 +48,8 @@ export class Tile extends Mesh {
     public row: number;
     // 当前瓦块列
     public col: number;
+    // 当前瓦片世界坐标下的包围盒
+    public boundingBoxWorld: Box3 | undefined;
 
     private textureWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
     private geometryWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
@@ -175,8 +179,12 @@ export class Tile extends Mesh {
         this.geometry.computeBoundingBox();
         this.geometry.computeBoundingSphere();
         this.geometry.boundsTree = bvh;
+        this.matrixWorldNeedsUpdate = true;
 
-        // this.boundingBoxWorld.setFromObject(this);
+        if (this.geometry.boundingBox) {
+            this.boundingBoxWorld = this.geometry.boundingBox.clone();
+            this.boundingBoxWorld.applyMatrix4(this.matrixWorld);
+        }
         
         this.isGeometryReady = true;
 
@@ -188,7 +196,7 @@ export class Tile extends Mesh {
      * @param camera 相机，用以排序细分顺序。
      * @returns 
      */
-    public subdivide(camera: Camera) {
+    public subdivide() {
         const { childrenTiles, map, level, isReady, visible } = this;
 
         if (childrenTiles.length > 0 || level >= map.maxLevel || !isReady || !visible) return;
@@ -203,16 +211,7 @@ export class Tile extends Mesh {
             }
         }
 
-        const orderChildren = childrenTiles.sort((a, b) => {
-            const distanceA = a.geometry.boundingBox?.distanceToPoint(camera.position) ?? Infinity;
-            const distanceB = b.geometry.boundingBox?.distanceToPoint(camera.position) ?? Infinity;
-            return distanceA - distanceB;
-        });
-
-        orderChildren.forEach(item => {
-            item.loadGeometry();
-            item.loadTexture();
-        });
+        map.loadQueue.push(...this.childrenTiles);
     }
     
     /**
@@ -288,18 +287,21 @@ export class Tile extends Mesh {
      * @returns 
      */
     public update(camera: Camera) {
-        const { level, childrenTiles, geometry, isReady, map } = this;
+        const { level, childrenTiles, geometry, isReady, map, boundingBoxWorld } = this;
 
-        if (!isReady || !geometry.boundingBox) return;
-        // boundingBoxWorld.applyMatrix4(camera.matrixWorld);
-        let distance = geometry.boundingBox.distanceToPoint(camera.position);
+        if (!isReady || !geometry.boundingBox || !boundingBoxWorld) return;
+
+        boundingBoxWorld.set(geometry.boundingBox.min, geometry.boundingBox.max);
+        boundingBoxWorld.applyMatrix4(this.matrixWorld);
+
+        let distance = boundingBoxWorld.distanceToPoint(camera.position);
         distance /= Math.pow(2, 20 - level);
 
-        const isInFrustum = map.cameraFrustum.intersectsBox(geometry.boundingBox);
+        const isInFrustum = map.cameraFrustum.intersectsBox(boundingBoxWorld);
 
         if (distance < 60 && isInFrustum) {
             if (!childrenTiles.length) {
-                this.subdivide(camera);
+                this.subdivide();
             }
         }
         if (distance > 80 || !isInFrustum) {

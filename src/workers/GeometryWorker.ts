@@ -2,7 +2,7 @@ import proj4 from 'proj4';
 import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage } from '../utils/interfaces';
 import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../utils/utils';
 import { Martini } from '../Martini';
-import { BufferAttribute, BufferGeometry, Uint32BufferAttribute } from 'three';
+import { BufferAttribute, BufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
 import { ElevationFix } from '../ElevationFix';
 
@@ -94,8 +94,8 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
 
         // 根据生成的顶点和面信息计算几何体的 position 和 uv 信息
         for (let i = 0; i < numOfVertices; i++) {
-            const x = vertices[i * 2];
-            const y = vertices[i * 2 + 1];
+            const x = vertices[2 * i + 0];
+            const y = vertices[2 * i + 1];
             const pixelIdx = y * gridSize + x;
 
             const lon = (bottomRightLon - topLeftLon) * x / size + topLeftLon;

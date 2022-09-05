@@ -96,7 +96,6 @@ export class SatelliteMap extends Object3D {
             this.frame = 0;
         }
         // 修正相机高度
-        // TODO: 修正时应考虑是否为世界坐标
         const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
         raycastOrigin.set(camera.position.x, 100000, camera.position.z);
@@ -123,5 +122,14 @@ export class SatelliteMap extends Object3D {
             });
             this.loadQueue = [];
         }
+    }
+
+
+    public dispose() {
+        this.parent?.remove(this);
+        Tile.pool.forEach(tile => tile.dispose());
+        Tile.pool.length = 0;
+        Tile.textureWorkerPool.dispose();
+        Tile.geometryWorkerPool.dispose();
     }
 }

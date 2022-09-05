@@ -41,4 +41,9 @@ export class WorkerPool {
         useTimes[index]++;
         return workers[index];
     }
+
+    public dispose() {
+        this.workers.forEach(worker => worker.terminate());
+        this.workers.length = 0;
+    }
 }

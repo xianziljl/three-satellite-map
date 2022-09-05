@@ -1,7 +1,7 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, DoubleSide, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, Object3D, PlaneBufferGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
-import { acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
+import { acceleratedRaycast, disposeBoundsTree, MeshBVH } from 'three-mesh-bvh';
 import { WorkerPool } from './workers/WorkerPool';
 import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
 import GeometryWorker from 'web-worker:./workers/GeometryWorker.ts';
@@ -10,12 +10,10 @@ export class Tile extends Mesh {
     public static VECTOR3 = new Vector3();
     // 对象池
     public static pool: Tile[] = [];
-
-    public static loadQueue: Tile[] = [];
     
     public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
 
-    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 4);
+    public static geometryWorkerPool = new WorkerPool(GeometryWorker, 3);
     // just worker
     public textureWorker: Worker;
     // 生成网格的 worker
@@ -66,6 +64,7 @@ export class Tile extends Mesh {
         this.material = new MeshStandardMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
+        this.geometry.disposeBoundsTree = disposeBoundsTree;
         this.raycast = acceleratedRaycast;
 
         this.textureWorker = Tile.textureWorkerPool.getWorker();
@@ -310,6 +309,18 @@ export class Tile extends Mesh {
             this.simplify();
         }
         childrenTiles.forEach(child => child.update(camera));
+    }
+
+    /**
+     * 销毁瓦块，仅作为父 map 调用。
+     * @returns 
+     */
+    public dispose() {
+        this.map.remove(this);
+        this.geometry.disposeBoundsTree();
+        this.geometry.dispose();
+        this.material.dispose();
+        this.texture.dispose();
     }
 
     /**

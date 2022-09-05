@@ -1,8 +1,7 @@
-import { BufferGeometry, Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
+import { Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
 import { latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
-import { computeBoundsTree, disposeBoundsTree } from 'three-mesh-bvh';
 
 export interface SatelliteParams {
     start: LonLat,

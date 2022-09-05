@@ -67,6 +67,8 @@ export class Tile extends Mesh {
         this.geometry.disposeBoundsTree = disposeBoundsTree;
         this.raycast = acceleratedRaycast;
 
+        this.renderOrder = this.level;
+
         this.textureWorker = Tile.textureWorkerPool.getWorker();
         const { terrainFixGeometrys } = map;
         const initMessage = terrainFixGeometrys ? { init: true, terrainFixGeometrys } : null;
@@ -237,13 +239,11 @@ export class Tile extends Mesh {
      */
     private onload() {
         this.map.add(this);
+        this.visible = true;
 
-        let parentTile = this.parentTile;
+        const parentTile = this.parentTile;
 
-        if (!parentTile) {
-            this.visible = true;
-            return;
-        }
+        if (!parentTile) return;
 
         const { childrenTiles } = parentTile;
 
@@ -255,7 +255,6 @@ export class Tile extends Mesh {
 
         if (readyBrotherCount === 4) {
             parentTile.visible = false;
-            childrenTiles.forEach(child => child.visible = true);
         }
     }
 

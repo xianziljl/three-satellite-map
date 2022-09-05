@@ -170,8 +170,11 @@ export class Tile extends Mesh {
 
         this.geometry.attributes.position.needsUpdate = true;
         this.geometry.attributes.uv.needsUpdate = true;
-        this.geometry.applyMatrix4(this.matrixWorld);
+        this.geometry.attributes.normal.needsUpdate = true;
+
         this.geometry.computeBoundingBox();
+        this.geometry.computeBoundingSphere();
+
         this.geometry.boundsTree = bvh;
         this.isGeometryReady = true;
 

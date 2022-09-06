@@ -99,6 +99,9 @@ export class SatelliteMap extends Object3D {
         const { raycaster, raycastOrigin, raycastDirection } = this;
         raycastOrigin.set(camera.position.x, 100000, camera.position.z);
         raycaster.firstHitOnly = true;
+        raycastDirection.x = camera.up.x * -1;
+        raycastDirection.y = camera.up.y * -1;
+        raycastDirection.z = camera.up.z * -1;
         raycaster.set(raycastOrigin, raycastDirection);
         const res = raycaster.intersectObjects(visibleTiles, true)[0];
         if (res && camera.position.y < res.point.y + 5) {

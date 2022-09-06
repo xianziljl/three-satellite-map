@@ -1,4 +1,4 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshStandardMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, disposeBoundsTree, MeshBVH } from 'three-mesh-bvh';
@@ -61,13 +61,11 @@ export class Tile extends Mesh {
 
         this.texture = new CanvasTexture(canvas);
         this.texture.anisotropy = 2;
-        this.material = new MeshStandardMaterial({ map: this.texture });
+        this.material = new MeshBasicMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
         this.geometry = new PlaneBufferGeometry();
         this.geometry.disposeBoundsTree = disposeBoundsTree;
         this.raycast = acceleratedRaycast;
-
-        this.renderOrder = this.level;
 
         this.textureWorker = Tile.textureWorkerPool.getWorker();
         const { terrainFixGeometrys } = map;
@@ -98,6 +96,7 @@ export class Tile extends Mesh {
         this.row = row;
         this.uid = `${this.id}-${level}-${row}-${col}`;
         this.parentTile = parentTile;
+        this.renderOrder = this.level;
     }
 
     /**

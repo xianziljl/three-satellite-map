@@ -11,7 +11,7 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 
 
 
-// const offset = { x: 671037.0, y: 4524163 };
+const offset = { x: 671037.0, y: 4524163 };
 const scene = new Scene();
 // scene.position.set(-offset.x, 0, offset.y);
 const fog = new Fog(0x6caeff, 0, Infinity);
@@ -25,7 +25,7 @@ const renderer = new WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 5, 1e7);
+const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1e7);
 // camera.up = new Vector3(0, 0, 1);
 camera.position.set(0, 100000, 0);
 camera.lookAt(0, 0, 0);
@@ -103,7 +103,7 @@ scene.add(shapeMesh)
 const tk = 'pk.eyJ1IjoiZG91YmliaWJpYmkiLCJhIjoiY2w1MTJndGgyMDFsMjNqcWkyeDFwNHBqdSJ9.8yY8jQ5yT4HFCWcC6Mf7WQ';
 const satelliteMap = new SatelliteMap({
     maxLevel: 18,
-    minLevel: 6,
+    minLevel: 5,
     zone: 50,
     start: { lat: 42.423176, lon: 113.889034 },
     end: { lat: 36.386768, lon: 124.314903 },
@@ -121,6 +121,7 @@ const satelliteMap = new SatelliteMap({
 });
 
 // satelliteMap.rotation.x = Math.PI / 2;
+satelliteMap.position.set(-offset.x, 0, offset.y);
 satelliteMap.debug = false;
 scene.add(satelliteMap);
 console.log(satelliteMap);

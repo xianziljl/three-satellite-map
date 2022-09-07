@@ -14,7 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "proj4": "^2.8.0",
-    "three": "^0.142.0",
+    "three": "^0.144.0",
     "three-mesh-bvh": "^0.5.14"
   },
   "devDependencies": {
@@ -24,7 +24,7 @@
     "@surma/rollup-plugin-off-main-thread": "^2.2.3",
     "@types/offscreencanvas": "^2019.7.0",
     "@types/proj4": "^2.5.2",
-    "@types/three": "0.125.0",
+    "@types/three": "^0.144.0",
     "rollup": "^2.75.6",
     "rollup-plugin-cleaner": "^1.0.0",
     "rollup-plugin-live-server": "^2.0.0",

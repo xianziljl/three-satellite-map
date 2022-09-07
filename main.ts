@@ -1,4 +1,4 @@
-import { AxesHelper, DoubleSide, Fog, MathUtils, Mesh, MeshBasicMaterial, MOUSE, Shape, ShapeBufferGeometry, TOUCH, Vector3 } from 'three';
+import { AxesHelper, Fog, MathUtils, Mesh, MeshBasicMaterial, Shape, ShapeGeometry, Vector3 } from 'three';
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -90,7 +90,7 @@ for (let i = 1; i < coords.length; i++) {
     shape.lineTo(coords[i].x, coords[i].y);
 }
 shape.lineTo(coords[0].x, coords[0].y);
-const shapeGeometry = new ShapeBufferGeometry(shape);
+const shapeGeometry = new ShapeGeometry(shape);
 shapeGeometry.rotateX(-Math.PI / 2);
 shapeGeometry.translate(0, 38, 0);
 

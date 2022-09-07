@@ -1,4 +1,4 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, disposeBoundsTree, MeshBVH } from 'three-mesh-bvh';
@@ -63,7 +63,7 @@ export class Tile extends Mesh {
         this.texture.anisotropy = 2;
         this.material = new MeshBasicMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
-        this.geometry = new PlaneBufferGeometry();
+        this.geometry = new PlaneGeometry();
         this.geometry.disposeBoundsTree = disposeBoundsTree;
         this.raycast = acceleratedRaycast;
 

@@ -296,7 +296,8 @@ export class Tile extends Mesh {
         boundingBoxWorld.set(geometry.boundingBox.min, geometry.boundingBox.max);
         boundingBoxWorld.applyMatrix4(this.matrixWorld);
 
-        let distance = boundingBoxWorld.distanceToPoint(camera.position);
+        camera.getWorldPosition(Tile.VECTOR3);
+        let distance = boundingBoxWorld.distanceToPoint(Tile.VECTOR3);
         distance /= Math.pow(2, 20 - level);
 
         const isInFrustum = map.cameraFrustum.intersectsBox(boundingBoxWorld);

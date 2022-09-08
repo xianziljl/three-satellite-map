@@ -6,7 +6,7 @@ function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {
 
     return {
         abort: () => controller.abort(),
-        ready: () => fetch(url, { ...init, signal })
+        ready: () => fetch(url, { ...init, signal, cache: 'force-cache' })
     };
 }
 

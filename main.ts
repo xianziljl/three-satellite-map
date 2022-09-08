@@ -164,7 +164,7 @@ function animate() {
 
     const vertices = satelliteMap.children.reduce((sum, cur) => {
         const tile = cur as Tile;
-        if (tile.visible) {
+        if (tile.visible && tile.geometry.attributes.position) {
             sum += tile.geometry.attributes.position.count;
         }
         return sum;

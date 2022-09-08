@@ -10,7 +10,7 @@ export class Tile extends Mesh {
     public static VECTOR3 = new Vector3();
     // 对象池
     public static pool: Tile[] = [];
-    
+
     public static textureWorkerPool = new WorkerPool(TextureWorker, 1);
 
     public static geometryWorkerPool = new WorkerPool(GeometryWorker, 3);
@@ -47,7 +47,7 @@ export class Tile extends Mesh {
     // 当前瓦块列
     public col: number;
     // 当前瓦片世界坐标下的包围盒
-    public boundingBoxWorld: Box3 | undefined;
+    public boundingBoxWorld: Box3 = new Box3();
 
     private textureWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
     private geometryWorkerListener: (e: MessageEvent<GeometryWorkerReceiveMessage>) => void;
@@ -184,11 +184,6 @@ export class Tile extends Mesh {
         this.geometry.computeBoundingSphere();
         this.geometry.boundsTree = bvh;
         this.matrixWorldNeedsUpdate = true;
-
-        if (this.geometry.boundingBox) {
-            this.boundingBoxWorld = this.geometry.boundingBox.clone();
-            this.boundingBoxWorld.applyMatrix4(this.matrixWorld);
-        }
         
         this.isGeometryReady = true;
 
@@ -206,17 +201,14 @@ export class Tile extends Mesh {
         this.visible = true;
 
         const parentTile = this.parentTile;
-
         if (!parentTile) return;
 
         const { childrenTiles } = parentTile;
 
         let readyBrotherCount = 0;
-
         childrenTiles.forEach(child => {
             if (child.isReady) readyBrotherCount++;
         });
-
         if (readyBrotherCount === 4) {
             parentTile.visible = false;
         }
@@ -250,9 +242,7 @@ export class Tile extends Mesh {
      * @returns 
      */
     public simplify() {
-        const { childrenTiles } = this;
-        childrenTiles.forEach(child => child.recycle());
-
+        this.childrenTiles.forEach(child => child.recycle());
         this.childrenTiles = [];
         this.visible = true;
     }
@@ -263,7 +253,7 @@ export class Tile extends Mesh {
      * 2. 取消正在进行的请求（主线程或者通知 woker 线程取消）
      */
     public recycle(): void {
-        const { uid, map, geometry, childrenTiles, textureWorker, geometryWorker, textureWorkerListener, geometryWorkerListener } = this;
+        const { uid, map, geometry, childrenTiles, textureWorker, geometryWorker, boundingBoxWorld, textureWorkerListener, geometryWorkerListener } = this;
 
         textureWorker.removeEventListener('message', textureWorkerListener);
         geometryWorker.removeEventListener('message', geometryWorkerListener);
@@ -273,6 +263,9 @@ export class Tile extends Mesh {
         geometry.disposeBoundsTree();
 
         childrenTiles.forEach(child => child.recycle());
+
+        geometry.boundingBox?.makeEmpty();
+        boundingBoxWorld.makeEmpty();
 
         map.remove(this);
         map.removeFromLoadQueue(this);
@@ -293,8 +286,7 @@ export class Tile extends Mesh {
 
         if (!isReady || !geometry.boundingBox || !boundingBoxWorld) return;
 
-        boundingBoxWorld.set(geometry.boundingBox.min, geometry.boundingBox.max);
-        boundingBoxWorld.applyMatrix4(this.matrixWorld);
+        boundingBoxWorld.copy(geometry.boundingBox).applyMatrix4(this.matrixWorld);
 
         camera.getWorldPosition(Tile.VECTOR3);
         let distance = boundingBoxWorld.distanceToPoint(Tile.VECTOR3);

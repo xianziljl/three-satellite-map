@@ -87,7 +87,7 @@ export class SatelliteMap extends Object3D {
     public update(camera: PerspectiveCamera) {
         if (!this.visible) return;
         this.frame++;
-        if (this.frame === 10) {
+        if (this.frame === 6) {
             this.cameraMatrix4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
             this.cameraFrustum.setFromProjectionMatrix(this.cameraMatrix4);
             this.tiles.forEach(tile => tile.update(camera));

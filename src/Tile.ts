@@ -1,4 +1,4 @@
-import { Box3, BufferAttribute, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
+import { Box3, BufferAttribute, BufferGeometry, Camera, CanvasTexture, Float32BufferAttribute, Material, Mesh, MeshBasicMaterial, Vector3 } from 'three';
 import { GeometryWorkerPostMessage, GeometryWorkerReceiveMessage, TextureWorkerPostMessage, TextureWorkerReceiveMessage } from './utils/interfaces';
 import { SatelliteMap } from './SatelliteMap';
 import { acceleratedRaycast, disposeBoundsTree, MeshBVH } from 'three-mesh-bvh';
@@ -63,7 +63,7 @@ export class Tile extends Mesh {
         this.texture.anisotropy = 2;
         this.material = new MeshBasicMaterial({ map: this.texture });
         // this.material = new MeshNormalMaterial({ flatShading: true });
-        this.geometry = new PlaneGeometry();
+        this.geometry = new BufferGeometry();
         this.geometry.disposeBoundsTree = disposeBoundsTree;
         this.raycast = acceleratedRaycast;
 
@@ -88,7 +88,6 @@ export class Tile extends Mesh {
      * @param parentTile 父亲 
      */
     public init(level: number, col: number, row: number, parentTile: Tile | null) {
-        this.visible = false;
         this.isGeometryReady = false;
         this.isTextureReady = false;
         this.level = level;
@@ -97,13 +96,14 @@ export class Tile extends Mesh {
         this.uid = `${this.id}-${level}-${row}-${col}`;
         this.parentTile = parentTile;
         this.renderOrder = this.level;
+        // TODO: 粗略计算 boundingBoxWorld 和 position，以便继续细分
     }
 
     /**
      * 从 worker 中加载瓦片图。
      */
     public loadTexture() {
-        const { version, id, uid, level, row, col, map, canvas } = this;
+        const { version, id, uid, level, row, col, map, canvas, textureWorker, textureWorkerListener } = this;
 
         const url = map.satelliteResource(level, col, row);
 
@@ -112,12 +112,12 @@ export class Tile extends Mesh {
             msg.texts = [level + '', col + '', row + ''];
         }
 
-        this.textureWorker.addEventListener('message', this.textureWorkerListener);
+        textureWorker.addEventListener('message', textureWorkerListener);
         if (version === 0) {
             msg.canvas = canvas;
-            this.textureWorker.postMessage(msg, [canvas]);
+            textureWorker.postMessage(msg, [canvas]);
         } else {
-            this.textureWorker.postMessage(msg);
+            textureWorker.postMessage(msg);
         }
     }
     
@@ -125,15 +125,15 @@ export class Tile extends Mesh {
      * 从 worker 中加载并生成地形网格。
      */
     public loadGeometry() {
-        const { id, uid, level, row, col, map } = this;
+        const { id, uid, level, row, col, map, geometryWorker, geometryWorkerListener } = this;
         const { zone, terrainMaxError: maxError } = map;
 
         const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, maxError, init: false };
 
         msg.url = map.terrainResource(level, col, row);
 
-        this.geometryWorker.addEventListener('message', this.geometryWorkerListener);
-        this.geometryWorker.postMessage(msg);
+        geometryWorker.addEventListener('message', geometryWorkerListener);
+        geometryWorker.postMessage(msg);
     }
 
     /**
@@ -224,8 +224,6 @@ export class Tile extends Mesh {
      */
     public simplify() {
         const { childrenTiles } = this;
-        if (!childrenTiles.length) return;
-
         childrenTiles.forEach(child => child.recycle());
 
         this.childrenTiles = [];
@@ -265,21 +263,23 @@ export class Tile extends Mesh {
      * 2. 取消正在进行的请求（主线程或者通知 woker 线程取消）
      */
     public recycle(): void {
-        const { uid, childrenTiles } = this;
+        const { uid, map, geometry, childrenTiles, textureWorker, geometryWorker, textureWorkerListener, geometryWorkerListener } = this;
 
-        this.textureWorker.removeEventListener('message', this.textureWorkerListener);
-        this.geometryWorker.removeEventListener('message', this.geometryWorkerListener);
-        this.textureWorker.postMessage({ uid });
-        this.geometryWorker.postMessage({ uid });
+        textureWorker.removeEventListener('message', textureWorkerListener);
+        geometryWorker.removeEventListener('message', geometryWorkerListener);
+        textureWorker.postMessage({ uid });
+        geometryWorker.postMessage({ uid });
+
+        geometry.disposeBoundsTree();
 
         childrenTiles.forEach(child => child.recycle());
 
+        map.remove(this);
+        map.removeFromLoadQueue(this);
+
         this.childrenTiles = [];
         this.parentTile = null;
-
-        this.map.remove(this);
-        this.map.removeFromLoadQueue(this);
-
+        this.visible = false;
         this.isUsing = false;
     }
     
@@ -302,14 +302,9 @@ export class Tile extends Mesh {
 
         const isInFrustum = map.cameraFrustum.intersectsBox(boundingBoxWorld);
 
-        if (distance < 60 && isInFrustum) {
-            if (!childrenTiles.length) {
-                this.subdivide();
-            }
-        }
-        if (distance > 80 || !isInFrustum) {
-            this.simplify();
-        }
+        if (distance < 60 && isInFrustum) this.subdivide();
+        if (distance > 80 || !isInFrustum) this.simplify();
+
         childrenTiles.forEach(child => child.update(camera));
     }
 

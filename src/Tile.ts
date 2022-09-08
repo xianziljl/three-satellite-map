@@ -196,6 +196,33 @@ export class Tile extends Mesh {
     }
     
     /**
+     * 瓦片加载完成时执行：
+     * 1. 生成 geometry。
+     * 2. 在兄弟节点全部就绪时隐藏父节点，显示兄弟节点。
+     * @returns 
+     */
+    private onload() {
+        this.map.add(this);
+        this.visible = true;
+
+        const parentTile = this.parentTile;
+
+        if (!parentTile) return;
+
+        const { childrenTiles } = parentTile;
+
+        let readyBrotherCount = 0;
+
+        childrenTiles.forEach(child => {
+            if (child.isReady) readyBrotherCount++;
+        });
+
+        if (readyBrotherCount === 4) {
+            parentTile.visible = false;
+        }
+    }
+    
+    /**
      * 瓦片细分
      * @param camera 相机，用以排序细分顺序。
      * @returns 
@@ -228,33 +255,6 @@ export class Tile extends Mesh {
 
         this.childrenTiles = [];
         this.visible = true;
-    }
-    
-    /**
-     * 瓦片加载完成时执行：
-     * 1. 生成 geometry。
-     * 2. 在兄弟节点全部就绪时隐藏父节点，显示兄弟节点。
-     * @returns 
-     */
-    private onload() {
-        this.map.add(this);
-        this.visible = true;
-
-        const parentTile = this.parentTile;
-
-        if (!parentTile) return;
-
-        const { childrenTiles } = parentTile;
-
-        let readyBrotherCount = 0;
-
-        childrenTiles.forEach(child => {
-            if (child.isReady) readyBrotherCount++;
-        });
-
-        if (readyBrotherCount === 4) {
-            parentTile.visible = false;
-        }
     }
 
     /**

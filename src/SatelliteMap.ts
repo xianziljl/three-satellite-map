@@ -9,8 +9,9 @@ export interface SatelliteParams {
     zone: number,
     maxLevel: number,
     minLevel: number;
-    satelliteResource: TileRerource,
-    terrainResource: TileRerource,
+    satelliteResource?: TileRerource,
+    terrainResource?: TileRerource,
+    glbResource?: TileRerource,
     offset?: Coordinate;
     terrainMaxError?: number;
     terrainFixGeometrys?: TerrainFixGeometry[];
@@ -29,8 +30,9 @@ export class SatelliteMap extends Object3D {
     public end: LonLat;
     public zone: number;
 
-    public satelliteResource: TileRerource;
-    public terrainResource: TileRerource;
+    public satelliteResource?: TileRerource;
+    public terrainResource?: TileRerource;
+    public glbResource?: TileRerource;
     public terrainMaxError: number;
     public terrainFixGeometrys?: TerrainFixGeometry[];
 
@@ -52,6 +54,7 @@ export class SatelliteMap extends Object3D {
         this.end = params.end;
         this.satelliteResource = params.satelliteResource;
         this.terrainResource = params.terrainResource;
+        this.glbResource = params.glbResource;
         this.terrainMaxError = params.terrainMaxError || 5;
         this.terrainFixGeometrys = params.terrainFixGeometrys;
 
@@ -75,11 +78,14 @@ export class SatelliteMap extends Object3D {
                 const tile = Tile.getInstance(this);
 
                 tile.init(minLevel, col, row, null);
-                tile.loadTexture();
-                tile.loadGeometry();
+                if (this.glbResource) {
+                    tile.loadGLB();
+                } else {
+                    tile.loadTexture();
+                    tile.loadGeometry();
+                }
 
                 this.tiles.push(tile);
-                this.add(tile);
             }
         }
     }
@@ -117,10 +123,15 @@ export class SatelliteMap extends Object3D {
                 return distanceA - distanceB;
             });
 
-            ordered.forEach(item => {
-                item.loadGeometry();
-                item.loadTexture();
-            });
+            if (this.glbResource) {
+                ordered.forEach(tile => tile.loadGLB());
+            } else {
+                ordered.forEach(tile => {
+                    tile.loadGeometry();
+                    tile.loadTexture();
+                });
+            }
+
             this.loadQueue = [];
         }
     }

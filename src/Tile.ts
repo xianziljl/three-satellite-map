@@ -38,6 +38,8 @@ export class Tile extends Mesh {
     public isTextureReady = false;
     // 网格是否就绪
     public isGeometryReady = false;
+    // glb 加载完成
+    public isGLBReady = false;
     // 此瓦块被使用的次数
     public version = 0;
     // 当前瓦块层级
@@ -77,7 +79,7 @@ export class Tile extends Mesh {
     }
 
     public get isReady(): boolean {
-        return this.isGeometryReady && this.isTextureReady;
+        return this.isGLBReady || (this.isGeometryReady && this.isTextureReady);
     }
 
     /**
@@ -105,6 +107,8 @@ export class Tile extends Mesh {
     public loadTexture() {
         const { version, id, uid, level, row, col, map, canvas, textureWorker, textureWorkerListener } = this;
 
+        if (!map.satelliteResource) return;
+
         const url = map.satelliteResource(level, col, row);
 
         const msg: TextureWorkerPostMessage = { id, uid, url };
@@ -126,6 +130,9 @@ export class Tile extends Mesh {
      */
     public loadGeometry() {
         const { id, uid, level, row, col, map, geometryWorker, geometryWorkerListener } = this;
+
+        if (!map.terrainResource) return;
+
         const { zone, terrainMaxError: maxError } = map;
 
         const msg: GeometryWorkerPostMessage = { id, uid, level, row, col, zone, maxError, init: false };
@@ -134,6 +141,10 @@ export class Tile extends Mesh {
 
         geometryWorker.addEventListener('message', geometryWorkerListener);
         geometryWorker.postMessage(msg);
+    }
+
+    public loadGLB() {
+        // TODO: 加载 glb
     }
 
     /**
@@ -188,6 +199,10 @@ export class Tile extends Mesh {
         this.isGeometryReady = true;
 
         if (this.isReady) this.onload();
+    }
+
+    private onGLBWorkerMessage(e: any) {
+
     }
     
     /**

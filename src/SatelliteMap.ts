@@ -18,6 +18,9 @@ export interface SatelliteParams {
 }
 
 export class SatelliteMap extends Object3D {
+    public static raycaster = new Raycaster();
+    public static raycastOrigin = new Vector3();
+    public static raycastDirection = new Vector3(0, -1, 0);
 
     public debug = false;
 
@@ -40,9 +43,6 @@ export class SatelliteMap extends Object3D {
     public loadQueue: Tile[] = [];
 
     private frame = 0;
-    private raycaster = new Raycaster();
-    private raycastOrigin = new Vector3();
-    private raycastDirection = new Vector3(0, -1, 0);
 
     constructor(params: SatelliteParams) {
         super();
@@ -103,7 +103,7 @@ export class SatelliteMap extends Object3D {
         // 修正相机高度
         const upAxis = getUpAxis(camera.up);
         const visibleTiles = this.children.filter(child => child.visible);
-        const { raycaster, raycastOrigin, raycastDirection } = this;
+        const { raycaster, raycastOrigin, raycastDirection } = SatelliteMap;
 
         camera.getWorldPosition(raycastOrigin);
         raycastDirection.set(0, 0, 0);

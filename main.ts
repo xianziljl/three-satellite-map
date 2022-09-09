@@ -2,7 +2,7 @@ import { AxesHelper, Fog, MathUtils, Mesh, MeshBasicMaterial, Shape, ShapeGeomet
 import { AmbientLight, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { EARTH_PERIMETER, wgs84ToUTM } from './src/utils/utils';
+import { EARTH_PERIMETER, getUpAxis, wgs84ToUTM } from './src/utils/utils';
 import { TerrainFixMode } from './src/utils/interfaces';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Sky } from 'three/examples/jsm/objects/Sky';
@@ -148,13 +148,15 @@ const geometriesEl = document.getElementById('geometries');
 const texturesEl = document.getElementById('textures');
 const drawcallsEl = document.getElementById('drawcalls');
 
+const cameraUpAxis = getUpAxis(camera.up);
+
 function animate() {
     requestAnimationFrame(animate);
 
     controls.update();
 
     satelliteMap.update(camera);
-    const far = camera.position.y * 50;
+    const far = camera.position[cameraUpAxis] * 50;
     camera.far = far + 5000;
     camera.updateProjectionMatrix();
 

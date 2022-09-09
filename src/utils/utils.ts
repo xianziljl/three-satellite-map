@@ -1,4 +1,5 @@
 import proj4 from 'proj4';
+import { Vector3 } from 'three';
 import { AbortableFetch, Coordinate } from './interfaces';
 
 
@@ -57,6 +58,13 @@ export function abortableFetch(url: string, init: RequestInit = {}): AbortableFe
         abort: () => controller.abort(),
         ready: () => fetch(url, { ...init, signal, cache: 'force-cache' })
     };
+}
+
+export function getUpAxis(up: Vector3): 'x' | 'y' | 'z' {
+    let upAxis: 'x' | 'y' | 'z' = 'y';
+    if (up.x === 1) upAxis = 'x';
+    if (up.z === 1) upAxis = 'z';
+    return upAxis;
 }
 
 

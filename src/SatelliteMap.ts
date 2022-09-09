@@ -1,6 +1,6 @@
 import { Camera, Frustum, Matrix4, Object3D, PerspectiveCamera, Raycaster, Vector3 } from 'three';
 import { LonLat, Coordinate, TerrainFixGeometry, TileRerource } from './utils/interfaces';
-import { latToTile, lonToTile } from './utils/utils';
+import { getUpAxis, latToTile, lonToTile } from './utils/utils';
 import { Tile } from './Tile';
 
 export interface SatelliteParams {
@@ -101,10 +101,7 @@ export class SatelliteMap extends Object3D {
             this.frame = 0;
         }
         // 修正相机高度
-        let upAxis: 'x' | 'y' | 'z' = 'y';
-        if (camera.up.x === 1) upAxis = 'x';
-        if (camera.up.z === 1) upAxis = 'z';
-
+        const upAxis = getUpAxis(camera.up);
         const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
 

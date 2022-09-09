@@ -101,25 +101,34 @@ export class SatelliteMap extends Object3D {
             this.frame = 0;
         }
         // 修正相机高度
+        let upAxis: 'x' | 'y' | 'z' = 'y';
+        if (camera.up.x === 1) upAxis = 'x';
+        if (camera.up.z === 1) upAxis = 'z';
+
         const visibleTiles = this.children.filter(child => child.visible);
         const { raycaster, raycastOrigin, raycastDirection } = this;
-        raycastOrigin.set(camera.position.x, 100000, camera.position.z);
+
+        camera.getWorldPosition(raycastOrigin);
+        raycastDirection.set(0, 0, 0);
+        raycastOrigin[upAxis] = 10000;
+        raycastDirection[upAxis] = -1;
         raycaster.firstHitOnly = true;
-        raycastDirection.x = camera.up.x * -1;
-        raycastDirection.y = camera.up.y * -1;
-        raycastDirection.z = camera.up.z * -1;
         raycaster.set(raycastOrigin, raycastDirection);
+
         const res = raycaster.intersectObjects(visibleTiles, true)[0];
-        if (res && camera.position.y < res.point.y + 5) {
-            camera.position.y = res.point.y + 5;
+
+        if (res) {
+            const ele = res.point[upAxis] + 5;
+            if (camera.position[upAxis] < ele) camera.position[upAxis] = ele;
         }
     }
 
     public startLoadQueue(camera: Camera) {
         if (this.loadQueue.length) {
+            camera.getWorldPosition(Tile.VECTOR3);
             const ordered = this.loadQueue.sort((a, b) => {
-                const distanceA = a.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
-                const distanceB = b.boundingBoxWorld?.distanceToPoint(camera.position) ?? Infinity;
+                const distanceA = a.boundingBoxWorld.distanceToPoint(Tile.VECTOR3);
+                const distanceB = b.boundingBoxWorld.distanceToPoint(Tile.VECTOR3);
                 return distanceA - distanceB;
             });
 

@@ -7,6 +7,7 @@ import TextureWorker from 'web-worker:./workers/TextureWorker.ts';
 import GeometryWorker from 'web-worker:./workers/GeometryWorker.ts';
 
 export class Tile extends Mesh {
+    // 公用的 Vector3 ，用于各种物体 getWorldPosition(target).
     public static VECTOR3 = new Vector3();
     // 对象池
     public static pool: Tile[] = [];

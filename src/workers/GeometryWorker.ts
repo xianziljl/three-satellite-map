@@ -1,15 +1,14 @@
 import proj4 from 'proj4';
-import { AbortableFetch, GeometryWorkerPostMessage, GeometryWorkerReceiveMessage } from '../utils/interfaces';
+import { AbortableFetch, GeometryWorkerPostMessage } from '../utils/interfaces';
 import { abortableFetch, tileToLat, tileToLon, WGS84 } from '../utils/utils';
-import { Martini } from '../Martini';
+import { Martini } from '../core/Martini';
 import { BufferAttribute, BufferGeometry, Uint32BufferAttribute, Vector3 } from 'three';
 import { MeshBVH } from 'three-mesh-bvh';
-import { ElevationFix } from '../ElevationFix';
+import { ElevationFix } from '../core/ElevationFix';
 
 const size = 256;
 
 const requests = new Map<string, AbortableFetch>([]); // {uid, Fetch}
-const postQueue: GeometryWorkerReceiveMessage[] = [];
 const canvas = new OffscreenCanvas(size, size);
 const ctx = canvas.getContext('2d');
 const terrain = new Float32Array((size + 1) * (size + 1));
@@ -19,19 +18,19 @@ const elevationFixes: ElevationFix[] = [];
 
 
 self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
-    const { init, uid, url, level, maxError, row, col, zone, terrainFixGeometrys } = e.data;
+    const { init, uid, url, level, row, col, zone, terrainFixGeometrys, maxError } = e.data;
 
     if (init && terrainFixGeometrys) {
         terrainFixGeometrys.forEach(item => {
             const geometry = new BufferGeometry();
             const { position, uv, normal } = item.geometry.attributes;
-            geometry.setIndex(new BufferAttribute(item.geometry.index?.array ?? [], 1, false))
+            geometry.setIndex(new BufferAttribute(item.geometry.index?.array ?? [], 1, false));
             geometry.setAttribute('position', new BufferAttribute(position.array, 3));
             geometry.setAttribute('normal', new BufferAttribute(normal.array, 3));
             geometry.setAttribute('uv', new BufferAttribute(uv.array, 2));
             geometry.computeVertexNormals();
             elevationFixes.push(new ElevationFix(geometry, item.mode));
-        })
+        });
         return;
     }
 
@@ -40,9 +39,6 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             const req = requests.get(uid);
             if (req) req.abort();
             requests.delete(uid);
-            postQueue.forEach((item, i) => {
-                if (item.uid === uid) postQueue.splice(i, 1);
-            });
             return;
         }
 
@@ -77,7 +73,14 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         const martiniTile = martini.createTile(terrain);
 
         // 生成原始顶点和面信息
-        const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(maxError);
+        let maxErr = maxError;
+        if (!maxErr) {
+            // 自动计算误差
+            maxErr = Math.floor((20 - level) / 20 * 20) + 5;
+            maxErr = maxErr < 1 ? 1 : maxErr;
+        }
+        // console.log(level, maxErr)
+        const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(maxErr);
 
         // 四个角的经纬度
         const topLeftLon = tileToLon(col, level);
@@ -114,7 +117,7 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
             positions[3 * i + 2] = vz;
 
             uv[2 * i + 0] = x / size;
-            uv[2 * i + 1] = (size - y) / size;
+            uv[2 * i + 1] = y / size;
         }
 
         // 计算分层包围盒
@@ -135,31 +138,23 @@ self.onmessage = async (e: MessageEvent<GeometryWorkerPostMessage>) => {
         const serializedBVH = MeshBVH.serialize(bvh, { cloneBuffers: false });
 
         // 加入更新队列
-        postQueue.push({ uid, positions, triangles, uv, normal, serializedBVH, center });
+        const data = { type: 'geometry', uid, positions, uv, normal, serializedBVH, center };
+        const transferable = [
+            data.positions.buffer,
+            // data.triangles.buffer,
+            data.uv.buffer,
+            data.normal.buffer,
+            data.serializedBVH.index.buffer,
+            ...data.serializedBVH.roots
+        ];
+        // @ts-ignore
+        self.postMessage(data, transferable);
+    } catch (e) {
+        console.log('Geometry worker error: ' + e);
     } finally {
         requests.delete(uid);
     }
 };
 
-const post = () => {
-    if (postQueue.length) {
-        const data = postQueue[0];
-
-        const transferable = [
-            data.positions.buffer,
-            data.triangles.buffer,
-            data.uv.buffer,
-            data.normal.buffer,
-            data.serializedBVH.index.buffer,
-            ...data.serializedBVH.roots
-        ]
-        // @ts-ignore
-        self.postMessage(data, transferable);
-        postQueue.shift();
-    }
-    requestAnimationFrame(post);
-};
-
-post();
 
 

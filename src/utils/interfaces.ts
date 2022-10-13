@@ -1,4 +1,4 @@
-import { BufferGeometry, Mesh, Vector3 } from 'three';
+import { BufferGeometry, Vector3 } from 'three';
 import { SerializedBVH } from 'three-mesh-bvh';
 
 export interface Coordinate {
@@ -18,13 +18,15 @@ export interface AbortableFetch {
 }
 
 export interface TextureWorkerReceiveMessage {
+    type: string;
     uid: string;
+    bitmap?: ImageBitmap;
 }
 
 export interface GeometryWorkerReceiveMessage {
+    type: string;
     uid: string;
     positions: Float32Array;
-    triangles: Uint32Array;
     serializedBVH: SerializedBVH;
     uv: Float32Array;
     normal: Float32Array;
@@ -41,27 +43,36 @@ export interface TextureWorkerPostMessage {
 }
 
 export interface GeometryWorkerPostMessage {
-    init: boolean;
+    init?: boolean;
     id: number;
     uid: string;
     level: number;
-    maxError: number;
     row: number;
     col: number;
     zone: number;
     url?: string;
+    maxError?: number,
     terrainFixGeometrys?: TerrainFixGeometry[];
 }
 
-
-export enum TerrainFixMode {
-    UP = 1,
-    DOWN = 2,
-    MATCH = 3
+export interface GLBWorkerPostMessage {
+    init?: boolean;
+    id: number;
+    uid: string;
+    url?: string;
+    canvas?: OffscreenCanvas;
+    texts?: string[];
+    terrainFixGeometrys?: TerrainFixGeometry[];
+    dracoPath?: string;
 }
 
+export interface GLBWorkerReceiveMessage extends GeometryWorkerReceiveMessage {
+    bitmap?: ImageBitmap;
+}
+
+
 export interface TerrainFixGeometry {
-    mode: TerrainFixMode,
+    mode: number,
     geometry: BufferGeometry;
 };
 

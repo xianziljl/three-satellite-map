@@ -29,25 +29,16 @@ export function tileToLat(row: number, level: number) {
     return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))));
 }
 
-export function wgs84ToUTM(coord: Coordinate, zone: number, offset?: Coordinate): Coordinate {
+export function wgs84ToUTM(coord: Coordinate, zone: number): Coordinate {
     const utm = `+proj=utm +zone= ${zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs `;
     const res = proj4(WGS84, utm).forward(coord);
-    if (offset) {
-        res.x -= offset.x;
-        res.y -= offset.y;
-    }
     return res;
 }
 
-export function bitchWgs84ToUTM(coords: Coordinate[], zone: number, offset = { x: 0, y: 0 }): Coordinate[] {
+export function bitchWgs84ToUTM(coords: Coordinate[], zone: number): Coordinate[] {
     const utm = `+proj=utm +zone= ${zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs `;
     const proj = proj4(WGS84, utm);
-    return coords.map(coord => {
-        const item = proj.forward(coord);
-        item.x -= offset.x;
-        item.y -= offset.y;
-        return item;
-    })
+    return coords.map(coord => proj.forward(coord));
 }
 
 export function abortableFetch(url: string, init: RequestInit = {}): AbortableFetch {

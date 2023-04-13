@@ -1,16 +1,26 @@
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+    server: {
+        open: '/example/index.html'
+    },
     build: {
         lib: {
             entry: 'src/index.ts',
-            name: 'satellite-map'
+            name: 'SatelliteMap',
+            fileName: 'satellite-map',
+            formats: ['es'],
         },
         sourcemap: true,
         rollupOptions: {
-            external: ['three', 'three-mesh-bvh', 'proj4']
+            external: [
+                'three',
+                'three-mesh-bvh',
+                '@here/quantized-mesh-decoder',
+                '@mapbox/tilebelt',
+                'tilebelt-wgs84'
+            ]
         }
     },
-    plugins: [dts()]
+    plugins: []
 });

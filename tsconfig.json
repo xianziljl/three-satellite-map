@@ -17,5 +17,9 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
   },
-  "include": ["src"]
+  "include": ["vite-env.d.ts", "src/index.ts"],
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"],
+    "out": "docs"
+  }
 }

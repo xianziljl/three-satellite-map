@@ -8,6 +8,8 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
     maxZoom = 12;
     coordType = UTM;
     utmZone = 50;
+    tileSize = 512;
+    computeVertexNormal = false;
     private _worker?: PromiseWorker;
     private _useWorker = true;
 
@@ -48,6 +50,7 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
             id: this.getId(tileNo),
             url: this.getUrl(tileNo),
             maxZ: this.maxZoom,
+            tileSize: this.tileSize,
             coordType: this.coordType,
             utmZone: this.utmZone,
         };
@@ -56,7 +59,9 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
         geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
         geometry.setAttribute('uv', new BufferAttribute(data.uv, 2));
         geometry.setIndex(new BufferAttribute(data.triangles, 1));
-        // geometry.computeVertexNormals();
+        if (this.computeVertexNormal) {
+            geometry.computeVertexNormals();
+        }
         return geometry;
     }
 

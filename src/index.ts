@@ -1,5 +1,5 @@
-export * from './Map';
-export * from './Tile';
+export * from './Map/Map';
+export * from './Map/Tile';
 
 export * from './Utils/Fetch';
 

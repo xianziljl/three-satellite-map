@@ -5,6 +5,7 @@ type MessageType = MessageEvent<{
     tileNo: number[];
     maxZ: number; // RGB 图片最大层级
     url: string;
+    tileSize: number,
     coordType?: string;
     utmZone?: number;
     abort?: boolean;
@@ -12,7 +13,7 @@ type MessageType = MessageEvent<{
 }>;
 
 self.onmessage = async (e: MessageType) => {
-    const { id, tileNo, maxZ, url, coordType, utmZone, abort, dispose } = e.data;
+    const { id, tileNo, maxZ, url, tileSize, coordType, utmZone, abort, dispose } = e.data;
 
     if (abort) {
         MartiniTileUtil.fetchingMap.get(id)?.abort();
@@ -26,7 +27,7 @@ self.onmessage = async (e: MessageType) => {
     }
 
     try {
-        const { positions, uv, triangles } = await MartiniTileUtil.getTileGeometryAttributes(tileNo, url, maxZ, coordType, utmZone);
+        const { positions, uv, triangles } = await MartiniTileUtil.getTileGeometryAttributes(tileNo, url, tileSize, maxZ, coordType, utmZone);
         const transferableObjects = [
             positions.buffer,
             uv.buffer,

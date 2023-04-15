@@ -27,7 +27,7 @@ export class TerrainUtil {
                 const r = data[k + 0];
                 const g = data[k + 1];
                 const b = data[k + 2];
-                terrain[y * gridSize + x] = (r * 256 * 256 + g * 256 + b) / 10 - 10000;
+                terrain[y * gridSize + x] = (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
             }
         }
         for (let x = 0; x < gridSize - 1; x++) {

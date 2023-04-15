@@ -2,7 +2,6 @@ import { AmbientLight, AxesHelper, DirectionalLight, DirectionalLightHelper, Per
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { Map, PlaneProvider, MapProvider, TerrainMeshProvider, UTM, MERC, MartiniTerrainProvider } from '../src/index';
-import { createBox } from './shaderTest';
 
 
 const scene = new Scene();
@@ -55,24 +54,25 @@ const planProvider = new PlaneProvider();
 planProvider.coordType = UTM;
 
 const martiniProvider = new MartiniTerrainProvider();
-// martiniProvider.source = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/[z]/[x]/[y].pngraw?access_token=sk.eyJ1IjoiMTIzNDU2bWFwYm94IiwiYSI6ImNsZGdzNDQ4NDAwYnk0MG1kOWM3dTZqdzkifQ.agAAAPQnGwvT4B3wPpWrWA';
+martiniProvider.source = 'http://127.0.0.1:5501/tiles/[z]/[x]/[y]/terrain.png';
 martiniProvider.coordType = UTM;
 
 const mapProvider = new MapProvider();
 mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
-mapProvider.showTileNo = false;
+mapProvider.showTileNo = true;
 mapProvider.useWorker = true;
 
 const meshProvider = new TerrainMeshProvider(martiniProvider, mapProvider);
 meshProvider.showBoundingBox = false;
 meshProvider.wireframe = false;
 meshProvider.flatShading = false;
+// meshProvider.useStandardMaterial = true;
 
 const map = new Map();
 map.provider = meshProvider;
 
 map.bbox = [104.955976, 20.149765, 120.998419, 30.528687];
-map.maxZoom = 20;
+map.maxZoom = 18;
 map.camera = camera;
 scene.add(map);
 

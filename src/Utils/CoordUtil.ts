@@ -16,6 +16,7 @@ const ellipsoidsWgs84 = { a: 6378137, b: 6356752.314245, f: 1 / 298.257223563 };
 const mgrsLatBands = 'CDEFGHJKLMNPQRSTUVWXX'; // X is repeated for 80-84°N
 const falseEasting = 500e3;
 const falseNorthing = 10000e3;
+const radians6 = toRadians(6);
 // from https://github.com/chrisveness/geodesy/blob/761587cd748bd9f7c9825195eba4a9fc5891b859/utm.js#L272
 export function lonLatToUtm(lon: number, lat: number, zoneOverride?: number) {
     if (!(-80 <= lat && lat <= 84)) throw new RangeError(`latitude ‘${lat}’ outside UTM limits`);
@@ -27,14 +28,14 @@ export function lonLatToUtm(lon: number, lat: number, zoneOverride?: number) {
     // grid zones are 8° tall; 0°N is offset 10 into latitude bands array
     const latBand = mgrsLatBands.charAt(Math.floor(lat / 8 + 10));
     // adjust zone & central meridian for Norway
-    if (zone === 31 && latBand === 'V' && lon >= 3) { zone++; λ0 += toRadians(6); }
+    if (zone === 31 && latBand === 'V' && lon >= 3) { zone++; λ0 += radians6; }
     // adjust zone & central meridian for Svalbard
-    else if (zone === 32 && latBand === 'X' && lon < 9) { zone--; λ0 -= toRadians(6); }
-    else if (zone === 32 && latBand === 'X' && lon >= 9) { zone++; λ0 += toRadians(6); }
-    else if (zone === 34 && latBand === 'X' && lon < 21) { zone--; λ0 -= toRadians(6); }
-    else if (zone === 34 && latBand === 'X' && lon >= 21) { zone++; λ0 += toRadians(6); }
-    else if (zone === 36 && latBand === 'X' && lon < 33) { zone--; λ0 -= toRadians(6); }
-    else if (zone === 36 && latBand === 'X' && lon >= 33) { zone++; λ0 += toRadians(6); }
+    else if (zone === 32 && latBand === 'X' && lon < 9) { zone--; λ0 -= radians6; }
+    else if (zone === 32 && latBand === 'X' && lon >= 9) { zone++; λ0 += radians6; }
+    else if (zone === 34 && latBand === 'X' && lon < 21) { zone--; λ0 -= radians6; }
+    else if (zone === 34 && latBand === 'X' && lon >= 21) { zone++; λ0 += radians6; }
+    else if (zone === 36 && latBand === 'X' && lon < 33) { zone--; λ0 -= radians6; }
+    else if (zone === 36 && latBand === 'X' && lon >= 33) { zone++; λ0 += radians6; }
 
     const φ = toRadians(lat);      // latitude ± from equator
     const λ = toRadians(lon) - λ0; // longitude ± from central meridian

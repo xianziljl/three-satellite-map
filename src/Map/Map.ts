@@ -1,6 +1,6 @@
 import { Camera, Frustum, Matrix4, Object3D, Vector3 } from 'three';
-import { Provider } from './Providers/Provider';
-import { Tile } from './Tile';
+import { Provider } from '../Providers/Provider';
+import { Tile } from '../Map/Tile';
 import { bboxToTile, getChildren } from '@mapbox/tilebelt';
 
 /**

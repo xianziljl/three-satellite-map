@@ -57,11 +57,7 @@ export class MartiniTileUtil {
         const { terrain, tileNo: parentTileNo } = this.findAncestorTerrainData(tileNo, maxZ);
         if (terrain) {
             let clipTimes = tileNo[2] - parentTileNo[2];
-            let size = this.baseSize;
-            while(clipTimes > 0) {
-                size = size / 2;
-                clipTimes--;
-            }
+            let size = this.baseSize / 2 ** clipTimes;
             const { x, y, smallBbox } = TerrainUtil.getChildPosition(parentTileNo, baseSize, tileNo);
             const _terrain = TerrainUtil.clip(terrain, baseSize, x, y, size);
             return { terrain: _terrain, size, bbox: smallBbox };
@@ -90,11 +86,19 @@ export class MartiniTileUtil {
      * @param utmZone 当坐标类型为utm时的区号。
      * @returns 几何体顶点、UV、顶点索引
      */
-    static async getTileGeometryAttributes(tileNo: number[], url: string, maxZ: number, coordType = MERC, utmZone?: number) {
-        const { terrain, size, bbox } = await this.getTerrainData(tileNo, url, maxZ);
+    static async getTileGeometryAttributes(
+        tileNo: number[],
+        sourceUrl: string,
+        sourceTileSize: number,
+        maxZ: number,
+        coordType = MERC,
+        utmZone?: number
+    ) {
+        const { terrain, size, bbox } = await this.getTerrainData(tileNo, sourceUrl, maxZ);
         const martini = this.getMartini(size);
         const martiniTile = martini.createTile(terrain);
-        const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(10);
+        const maxError = tileNo[2] > maxZ ? 5 : 10;
+        const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(maxError);
 
         const numOfVertices = vertices.length / 2;
         const positions = new Float32Array(numOfVertices * 3);

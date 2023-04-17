@@ -56,23 +56,24 @@ planProvider.coordType = UTM;
 const martiniProvider = new MartiniTerrainProvider();
 martiniProvider.source = 'http://127.0.0.1:5501/tiles/[z]/[x]/[y]/terrain.png';
 martiniProvider.coordType = UTM;
+martiniProvider.computeVertexNormal = false;
 
 const mapProvider = new MapProvider();
-mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
-mapProvider.showTileNo = true;
+// mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
+// mapProvider.showTileNo = true;
 mapProvider.useWorker = true;
 
 const meshProvider = new TerrainMeshProvider(martiniProvider, mapProvider);
-meshProvider.showBoundingBox = false;
-meshProvider.wireframe = false;
-meshProvider.flatShading = false;
-// meshProvider.useStandardMaterial = true;
+// meshProvider.showBoundingBox = true;
+// meshProvider.wireframe = true;
+// meshProvider.flatShading = true;
+
 
 const map = new Map();
 map.provider = meshProvider;
 
 map.bbox = [104.955976, 20.149765, 120.998419, 30.528687];
-map.maxZoom = 18;
+map.maxZoom = 20;
 map.camera = camera;
 scene.add(map);
 

@@ -13,7 +13,6 @@ class TerrainMeshProvider implements Provider<Mesh> {
     showBoundingBox = false;
     wireframe = false;
     flatShading = false;
-    useStandardMaterial = false;
 
     async getTile(tileNo: number[]): Promise<Mesh> {
         const tasks = [
@@ -24,9 +23,7 @@ class TerrainMeshProvider implements Provider<Mesh> {
         const geometry = res[0] as BufferGeometry;
         const texture = res[1] as Texture;
         const { wireframe, flatShading } = this;
-        const material = this.useStandardMaterial
-            ? new MeshStandardMaterial({ map: texture, wireframe, flatShading })
-            : new MeshBasicMaterial({ map: texture, wireframe });
+        const material = new MeshStandardMaterial({ map: texture, wireframe, flatShading });
         const mesh = new TerrainMesh();
 
         geometry.computeBoundingBox();

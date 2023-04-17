@@ -59,8 +59,17 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
         geometry.setAttribute('position', new BufferAttribute(data.positions, 3));
         geometry.setAttribute('uv', new BufferAttribute(data.uv, 2));
         geometry.setIndex(new BufferAttribute(data.triangles, 1));
+
         if (this.computeVertexNormal) {
             geometry.computeVertexNormals();
+        } else {
+            const normal = new Int8Array(data.positions.length);
+            for (let i = 0; i < data.positions.length; i += 3) {
+                normal[i] = 0;
+                normal[i + 1] = 0;
+                normal[i + 2] = 1;
+            }
+            geometry.setAttribute('normal', new BufferAttribute(normal, 3));
         }
         return geometry;
     }

@@ -1,13 +1,18 @@
-import { AmbientLight, AxesHelper, DirectionalLight, DirectionalLightHelper, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, AxesHelper, DirectionalLight, DirectionalLightHelper, Fog, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import { Map, PlaneProvider, MapProvider, TerrainMeshProvider, UTM, MERC, MartiniTerrainProvider } from '../src/index';
+import { Map, PlaneProvider, MapProvider, TerrainMeshProvider, UTM, MartiniTerrainProvider } from '../src/index';
+import { initFog } from './fog';
 
 
+initFog();
 const scene = new Scene();
+// const fog = new FogExp2(0xffffff, 0.0005);
+const fog = new Fog(0xffffff, 0, 1e5);
+scene.fog = fog;
 const renderer = new WebGLRenderer({ logarithmicDepthBuffer: true, antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setClearColor(0x888888);
+renderer.setClearColor(0xffffff);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.debug = { checkShaderErrors: false };
 document.body.appendChild(renderer.domElement);
@@ -54,7 +59,7 @@ const planProvider = new PlaneProvider();
 planProvider.coordType = UTM;
 
 const martiniProvider = new MartiniTerrainProvider();
-martiniProvider.source = 'http://127.0.0.1:5501/tiles/[z]/[x]/[y]/terrain.png';
+martiniProvider.source = 'http://127.0.0.1:5502/tiles/[z]/[x]/[y]/terrain.png';
 martiniProvider.coordType = UTM;
 martiniProvider.computeVertexNormal = false;
 
@@ -73,7 +78,7 @@ const map = new Map();
 map.provider = meshProvider;
 
 map.bbox = [104.955976, 20.149765, 120.998419, 30.528687];
-map.maxZoom = 20;
+map.maxZoom = 18;
 map.camera = camera;
 scene.add(map);
 
@@ -85,7 +90,9 @@ function animate() {
     controls.update();
     map.update();
 
-    const far = Math.abs(camera.position.z) * 50;
+    const z = Math.abs(camera.position.z);
+    const far = z * 20;
+    fog.far = far + 2000;
     camera.far = far + 5000;
     camera.updateProjectionMatrix();
 

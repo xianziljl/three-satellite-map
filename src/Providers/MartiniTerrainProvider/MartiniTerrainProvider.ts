@@ -1,4 +1,5 @@
 import { BufferAttribute, BufferGeometry } from 'three';
+import { HeightCorrection } from '../../HeightCorrection/HeightCorrection';
 import { UTM } from '../../Utils/CoordUtil';
 import { PromiseWorker } from '../../Utils/WorkerUtil';
 import { Provider } from '../Provider';
@@ -10,47 +11,23 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
     utmZone = 50;
     tileSize = 512;
     computeVertexNormal = false;
+    heightCorrections: HeightCorrection[] = [];
     private _worker?: PromiseWorker;
-    private _useWorker = true;
 
     source = 'https://api.maptiler.com/tiles/terrain-rgb-v2/[z]/[x]/[y].webp?key=L55MtSxL94Yb4hQeWewp';
 
-    set useWorker(use: boolean) {
-        this._useWorker = use;
-        if (!this._useWorker) {
-            this._worker?.terminate();
-            this._worker = undefined;
-        }
-    }
-
-    get useWorker() {
-        return this._useWorker;
-    }
-
     constructor() { }
 
-    async getTile(tileNo: number[]): Promise<BufferGeometry> {
-        if (this._useWorker) {
-            return this.getInWorkerThread(tileNo);
-        }
-        return this.getInMainThread();
-    }
-
-    private async getInMainThread() {
-        const geometry = new BufferGeometry();
-        return geometry;
-    }
-
-    private async getInWorkerThread(tileNo: number[]) {
+    async getTile(tileNo: number[]) {
         if (!this._worker) {
             this._worker = new PromiseWorker(MartiniWorker);
+            this._worker.postMessage({ heightCorrections: this.heightCorrections });
         }
         const message = {
             tileNo,
             id: this.getId(tileNo),
             url: this.getUrl(tileNo),
             maxZ: this.maxZoom,
-            tileSize: this.tileSize,
             coordType: this.coordType,
             utmZone: this.utmZone,
         };
@@ -75,18 +52,12 @@ class MartiniTerrainProvider implements Provider<BufferGeometry>{
     }
 
     async abort(tileNo: number[]) {
-        if (this._useWorker) {
-            this._worker?.postMessage({ id: this.getId(tileNo), abort: true });
-        } else {
-            // 
-        }
+        this._worker?.postMessage({ id: this.getId(tileNo), abort: true });
     }
 
     async dispose(tileNo: number[], target: BufferGeometry) {
         target.dispose();
-        if (this._useWorker) {
-            this._worker?.postMessage({ id: this.getId(tileNo), dispose: true });
-        }
+        this._worker?.postMessage({ id: this.getId(tileNo), dispose: true });
     }
 
     getId(tileNo: number[]) {

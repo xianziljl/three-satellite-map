@@ -1,6 +1,4 @@
 export interface WorkerMessageData {
-    id: string;
-    error?: boolean;
     [k: string]: any;
 }
 

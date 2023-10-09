@@ -7,6 +7,12 @@ dependencies:
   '@mapbox/tilebelt':
     specifier: ^1.0.2
     version: 1.0.2
+  earcut:
+    specifier: ^2.2.4
+    version: 2.2.4
+  extrude-polyline:
+    specifier: git+https://github.com/xianziljl/extrude-polyline.git
+    version: github.com/xianziljl/extrude-polyline/8f2e69506033bb9cf00ef88a2cbf57f3ed66be4d
   three:
     specifier: ^0.144.0
     version: 0.144.0
@@ -21,6 +27,9 @@ dependencies:
     version: 1.0.4
 
 devDependencies:
+  '@types/earcut':
+    specifier: ^2.1.1
+    version: 2.1.1
   '@types/mapbox__tilebelt':
     specifier: ^1.0.0
     version: 1.0.0
@@ -406,6 +415,10 @@ packages:
     resolution: {integrity: sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==}
     dev: true
 
+  /@types/earcut@2.1.1:
+    resolution: {integrity: sha512-w8oigUCDjElRHRRrMvn/spybSMyX8MTkKA5Dv+tS1IE/TgmNZPqUYtvYBXGY8cieSE66gm+szeK+bnbxC2xHTQ==}
+    dev: true
+
   /@types/estree@1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
     dev: true
@@ -453,6 +466,10 @@ packages:
       sprintf-js: 1.0.3
     dev: true
 
+  /as-number@1.0.0:
+    resolution: {integrity: sha512-HkI/zLo2AbSRO4fqVkmyf3hms0bJDs3iboHqTrNuwTiCRvdYXM7HFhfhB6Dk51anV2LM/IMB83mtK9mHw4FlAg==}
+    dev: false
+
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
     dev: true
@@ -496,6 +513,10 @@ packages:
     dependencies:
       ms: 2.1.2
     dev: true
+
+  /earcut@2.2.4:
+    resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==}
+    dev: false
 
   /esbuild@0.17.12:
     resolution: {integrity: sha512-bX/zHl7Gn2CpQwcMtRogTTBf9l1nl+H6R8nUbjk+RuKqAE3+8FDulLA+pHvX7aA7Xe07Iwa+CWvy9I8Y2qqPKQ==}
@@ -592,6 +613,10 @@ packages:
   /function-bind@1.1.1:
     resolution: {integrity: sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==}
     dev: true
+
+  /gl-vec2@1.3.0:
+    resolution: {integrity: sha512-YiqaAuNsheWmUV0Sa8k94kBB0D6RWjwZztyO+trEYS8KzJ6OQB/4686gdrf59wld4hHFIvaxynO3nRxpk1Ij/A==}
+    dev: false
 
   /glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -764,6 +789,12 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
     dev: true
+
+  /polyline-miter-util@1.0.1:
+    resolution: {integrity: sha512-/3u91zz6mBerBZo6qnOJOTjv7EfPhKtsV028jMyj86YpzLRNmCCFfrX7IO9tCEQ2W4x45yc+vKOezjf7u2Nd6Q==}
+    dependencies:
+      gl-vec2: 1.3.0
+    dev: false
 
   /postcss@8.4.21:
     resolution: {integrity: sha512-tP7u/Sn/dVxK2NnruI4H9BG+x+Wxz6oeZ1cJ8P6G/PZY0IKk4k/63TDsQf2kQq3+qoJeLm2kIBUNlZe3zgb4Zg==}
@@ -1035,3 +1066,13 @@ packages:
     optionalDependencies:
       commander: 2.20.3
     dev: true
+
+  github.com/xianziljl/extrude-polyline/8f2e69506033bb9cf00ef88a2cbf57f3ed66be4d:
+    resolution: {tarball: https://codeload.github.com/xianziljl/extrude-polyline/tar.gz/8f2e69506033bb9cf00ef88a2cbf57f3ed66be4d}
+    name: extrude-polyline
+    version: 1.0.6
+    dependencies:
+      as-number: 1.0.0
+      gl-vec2: 1.3.0
+      polyline-miter-util: 1.0.1
+    dev: false

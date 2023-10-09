@@ -87,3 +87,12 @@ export function lonLatToUtm(lon: number, lat: number, zoneOverride?: number) {
 
     return [x, y];
 }
+
+export function coordUniqByXY(coords: number[][]) {
+    const map = new Map<string, { i: number, coord: number[]; }>();
+    coords.forEach((coord, i) => map.set(`${coord[0], coord[1]}`, { i, coord }));
+    const arr = Array.from(map, ([_xy, item]) => item)
+        .sort((a, b) => a.i - b.i)
+        .map(item => item.coord);
+    return arr;
+}

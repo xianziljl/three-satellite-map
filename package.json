@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/earcut": "^2.1.1",
     "@types/mapbox__tilebelt": "^1.0.0",
     "@types/offscreencanvas": "^2019.7.0",
     "@types/three": "^0.144.0",
@@ -21,6 +22,8 @@
   "peerDependencies": {
     "@here/quantized-mesh-decoder": "^1.2.8",
     "@mapbox/tilebelt": "^1.0.2",
+    "earcut": "^2.2.4",
+    "extrude-polyline": "git+https://github.com/xianziljl/extrude-polyline.git",
     "three": "^0.144.0",
     "three-bvh-csg": "^0.0.5",
     "three-mesh-bvh": "^0.5.23",

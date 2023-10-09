@@ -12,13 +12,13 @@ export async function getTileBitmap(tileNo: number[], fetch: Fetch, debug = fals
     }
 
     if (!offscreencanvas) {
-        offscreencanvas = new OffscreenCanvas(256, 256);
+        offscreencanvas = new OffscreenCanvas(512, 512);
     }
     const ctx = offscreencanvas.getContext('2d');
     if (!ctx) {
         throw new Error('Offscreencanvas.getContext("2d") error!');
     }
-    const { width, height } = offscreencanvas;
+    const { width, height } = bitmap;
     ctx.drawImage(bitmap, 0, 0);
     ctx.rect(0, 0, width, height);
     ctx.strokeStyle = '#00FFFF';

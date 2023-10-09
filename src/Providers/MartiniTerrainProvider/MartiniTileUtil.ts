@@ -2,12 +2,13 @@ import { Fetch } from '../../Utils/Fetch';
 import { Martini } from './Martini';
 import { tileToBBOX } from '@mapbox/tilebelt';
 import { lonLatToUtm, lonLatToWebMerctor, MERC } from '../../Utils/CoordUtil';
-import { TerrainUtil } from '../../Utils/TerrainUtil';
 import { getParent } from '@mapbox/tilebelt';
+import { Terrain } from '../../Map/Terrain';
+import { HeightCorrection } from '../../HeightCorrection/HeightCorrection';
 
 
 export class MartiniTileUtil {
-    static terrainDataMap = new Map<string, Float32Array>();
+    static terrainMap = new Map<string, Terrain>();
     static fetchingMap = new Map<string, Fetch>();
     static martiniMap = new Map<number, Martini>();
     static baseSize = 512;
@@ -29,18 +30,19 @@ export class MartiniTileUtil {
      */
     static findAncestorTerrainData(tileNo: number[], maxZ: number) {
         const z = tileNo[2];
-        let terrain: Float32Array | undefined = undefined;
+        let terrain: Terrain | undefined = undefined;
         let parentTileNo = tileNo;
         const maxClip = z >= maxZ ? z - maxZ : 5;
         for (let i = 0; i < maxClip; i++) {
             parentTileNo = getParent(parentTileNo);
-            const _terrain = this.terrainDataMap.get(parentTileNo.join('-'));
+            const _terrain = this.terrainMap.get(parentTileNo.join('-'));
             if (_terrain) {
                 terrain = _terrain;
+                terrain.tileNo = parentTileNo;
                 break;
             }
         }
-        return { terrain, tileNo: parentTileNo };
+        return terrain;
     }
 
     /**
@@ -50,17 +52,15 @@ export class MartiniTileUtil {
      * @param maxZ 瓦片数据源所能提供的最大层级，大于此层级将从缓存切割瓦片而非下载
      * @returns 地形数据，地形大小，及地形对应的bbox
      */
-    static async getTerrainData(tileNo: number[], url: string, maxZ: number) {
+    static async getTerrainData(tileNo: number[], url: string, maxZ: number, heightCorrections?: HeightCorrection[]) {
         const id = tileNo.join('-');
-        const { baseSize } = this;
+        const bbox = tileToBBOX(tileNo);
 
-        const { terrain, tileNo: parentTileNo } = this.findAncestorTerrainData(tileNo, maxZ);
+        const terrain = this.findAncestorTerrainData(tileNo, maxZ);
         if (terrain) {
-            let clipTimes = tileNo[2] - parentTileNo[2];
+            let clipTimes = tileNo[2] - terrain.tileNo![2];
             let size = this.baseSize / 2 ** clipTimes;
-            const { x, y, smallBbox } = TerrainUtil.getChildPosition(parentTileNo, baseSize, tileNo);
-            const _terrain = TerrainUtil.clip(terrain, baseSize, x, y, size);
-            return { terrain: _terrain, size, bbox: smallBbox };
+            return terrain.clip(bbox, size);
         }
 
         const fetch = new Fetch(url, { cache: 'force-cache' });
@@ -69,9 +69,12 @@ export class MartiniTileUtil {
             const res = await fetch.ready();
             const blob = await res.blob();
             const bitmap = await createImageBitmap(blob);
-            const _terrain = TerrainUtil.getFromBitmap(bitmap, baseSize);
-            this.terrainDataMap.set(id, _terrain);
-            return { terrain: _terrain, size: baseSize, bbox: tileToBBOX(tileNo) };
+            const _terrain = Terrain.fromBitmap(bitmap, bbox);
+            if (heightCorrections) {
+                heightCorrections.forEach(hc => _terrain.fixHeight(hc));
+            }
+            this.terrainMap.set(id, _terrain);
+            return _terrain;
         } finally {
             this.fetchingMap.delete(id);
         }
@@ -89,14 +92,15 @@ export class MartiniTileUtil {
     static async getTileGeometryAttributes(
         tileNo: number[],
         sourceUrl: string,
-        sourceTileSize: number,
         maxZ: number,
         coordType = MERC,
-        utmZone?: number
+        utmZone?: number,
+        heightCorrections?: HeightCorrection[]
     ) {
-        const { terrain, size, bbox } = await this.getTerrainData(tileNo, sourceUrl, maxZ);
+        const terrain = await this.getTerrainData(tileNo, sourceUrl, maxZ, heightCorrections);
+        const { size, bbox, array } = terrain;
         const martini = this.getMartini(size);
-        const martiniTile = martini.createTile(terrain);
+        const martiniTile = martini.createTile(array);
         const maxError = tileNo[2] > maxZ ? 5 : 10;
         const { vertices, triangles, numVerticesWithoutSkirts } = martiniTile.getMeshWithSkirts(maxError);
 
@@ -108,15 +112,17 @@ export class MartiniTileUtil {
         const gridSize = size + 1;
 
         const coordConvertMethod = coordType === MERC ? lonLatToWebMerctor : lonLatToUtm;
+        const w = bbox[2] - bbox[0];
+        const h = bbox[3] - bbox[1];
         for (let i = 0; i < numOfVertices; i++) {
             const x = vertices[2 * i];
             const y = vertices[2 * i + 1];
             const pixelIdx = y * gridSize + x;
-            const lon = (bbox[2] - bbox[0]) * x / size + bbox[0];
-            const lat = (bbox[3] - bbox[1]) * (size - y) / size + bbox[1];
+            const lon = w * x / size + bbox[0];
+            const lat = h * (size - y) / size + bbox[1];
 
             const [vx, vy] = coordConvertMethod(lon, lat, utmZone);
-            const vz = terrain[pixelIdx];
+            const vz = array[pixelIdx];
 
             const skirtsHeight = (21 - z) * 10;
 

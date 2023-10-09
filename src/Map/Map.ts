@@ -85,7 +85,8 @@ class Map extends Object3D {
     }
 
     dispose() {
-        throw new Error('[Map.dispose] Method not implemented.');
+        this.rootTiles.forEach(tile => tile.dispose());
+        this.clear();
     }
 
     regenerate() {

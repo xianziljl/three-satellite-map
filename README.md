@@ -7,7 +7,7 @@ planProvider.coordType = UTM;
 
 const mapProvider = new MapProvider();
 mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
-mapProvider.debug = true;
+mapProvider.showTileNo = true;
 mapProvider.useWorker = true;
 
 const meshProvider = new MeshProvider(planProvider, mapProvider);

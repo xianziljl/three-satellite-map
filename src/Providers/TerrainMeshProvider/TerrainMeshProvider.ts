@@ -1,7 +1,6 @@
 import { Box3Helper, BufferGeometry, Mesh, MeshBasicMaterial, MeshStandardMaterial, Texture } from 'three';
 import { TerrainMesh } from './TerrainMesh';
 import { Provider } from '../Provider';
-// import { Completer } from '../Utils/PromiseUtils';
 
 class TerrainMeshProvider implements Provider<Mesh> {
     constructor(
@@ -30,7 +29,6 @@ class TerrainMeshProvider implements Provider<Mesh> {
 
         geometry.boundingBox!.getCenter(mesh.center);
         geometry.center();
-        geometry.computeBoundingSphere();
 
         mesh.position.copy(mesh.center);
 

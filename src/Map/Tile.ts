@@ -71,7 +71,7 @@ class Tile extends Object3D {
         const z = this.tileNo[2];
         distance /= Math.pow(2, this.map.provider.maxZoom - z);
 
-        if (distance < 60) {
+        if (distance < 75) {
             this.subdivide();
         }
         if (distance > 80) {

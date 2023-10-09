@@ -31,5 +31,5 @@ export async function getTileBitmap(tileNo: number[], fetch: Fetch, debug = fals
     ctx.fillStyle = '#66AAFF';
     ctx.fillText(`${tileNo[2]}`, 10, 80);
     // @ts-ignore
-    return await createImageBitmap(offscreencanvas, { imageOrientation: 'flipY' });
+    return await createImageBitmap(offscreencanvas, 0, 0, width, height, { imageOrientation: 'flipY' });
 }

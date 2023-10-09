@@ -32,7 +32,7 @@ export class MartiniTileUtil {
         const z = tileNo[2];
         let terrain: Terrain | undefined = undefined;
         let parentTileNo = tileNo;
-        const maxClip = z >= maxZ ? z - maxZ : 5;
+        const maxClip = z >= maxZ ? z - maxZ : 4;
         for (let i = 0; i < maxClip; i++) {
             parentTileNo = getParent(parentTileNo);
             const _terrain = this.terrainMap.get(parentTileNo.join('-'));

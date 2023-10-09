@@ -89,6 +89,9 @@ export class Terrain {
         this.boundingBox.max.set(bbox[2], bbox[3], max);
     }
 
+    /**
+     * @deprecated
+     */
     fixHeight(heightCorrection: HeightCorrection) {
         const { geometry, mode } = heightCorrection;
         if (!geometry) {

@@ -13,8 +13,8 @@ camera.position.set(122748.55963198132,2601316.0009934525,3417.6739523374094);
 controls.target.set(122916.14931300933, 2603745.730297569, 83.00993562901206);
 
 
-const planProvider = new PlaneProvider();
-planProvider.coordType = UTM;
+// const planProvider = new PlaneProvider();
+// planProvider.coordType = UTM;
 
 const martiniProvider = new MartiniTerrainProvider();
 martiniProvider.source = 'http://127.0.0.1:8080/tiles/[z]/[x]/[y]/terrain.png';
@@ -26,18 +26,18 @@ martiniProvider.heightCorrections = [heightCorrection];
 
 const mapProvider = new MapProvider();
 mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
-// mapProvider.showTileNo = true;
+mapProvider.showTileNo = false;
 mapProvider.useWorker = true;
 
 const meshProvider = new TerrainMeshProvider(martiniProvider, mapProvider);
-// meshProvider.showBoundingBox = true;
-// meshProvider.wireframe = true;
-// meshProvider.flatShading = true;
+meshProvider.showBoundingBox = false;
+meshProvider.wireframe = false;
+meshProvider.flatShading = false;
 
 const map = new Map();
 map.provider = meshProvider;
 map.bbox = [104.955976, 20.149765, 120.998419, 30.528687];
-map.maxZoom = 18;
+map.maxZoom = 20;
 map.camera = camera;
 
 scene.add(map);

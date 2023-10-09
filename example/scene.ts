@@ -7,7 +7,7 @@ import { initFog } from './fog';
 export function initScene() {
     initFog();
     const scene = new Scene();
-    // const fog = new FogExp2(0xffffff, 0.0005);
+    // const fog = new FogExp2(0x93c3ff, 0.0005);
     const fog = new Fog(0xffffff, 0, 1e5);
     scene.fog = fog;
     const renderer = new WebGLRenderer({ logarithmicDepthBuffer: true, antialias: true });
@@ -54,7 +54,7 @@ export function initScene() {
 
         const z = Math.abs(camera.position.z);
         const far = z * 20;
-        fog.far = far + 2000;
+        fog.far = far + 3000;
         camera.far = far + 5000;
         camera.updateProjectionMatrix();
 

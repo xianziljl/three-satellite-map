@@ -5,21 +5,22 @@ export default defineConfig({
         // open: '/example/index.html'
     },
     build: {
-        lib: {
-            entry: 'src/index.ts',
-            name: 'SatelliteMap',
-            fileName: 'satellite-map',
-            formats: ['es'],
-        },
-        sourcemap: true,
+        // lib: {
+        //     entry: 'src/index.ts',
+        //     name: 'SatelliteMap',
+        //     fileName: 'satellite-map',
+        //     formats: ['es'],
+        // },
+        // sourcemap: true,
         rollupOptions: {
-            external: [
-                'three',
-                'three-mesh-bvh',
-                '@here/quantized-mesh-decoder',
-                '@mapbox/tilebelt',
-                'tilebelt-wgs84'
-            ]
+            input: './example/index.html'
+            // external: [
+            //     'three',
+            //     'three-mesh-bvh',
+            //     '@here/quantized-mesh-decoder',
+            //     '@mapbox/tilebelt',
+            //     'tilebelt-wgs84'
+            // ]
         }
     },
     plugins: []

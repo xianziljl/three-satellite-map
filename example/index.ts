@@ -1,8 +1,7 @@
 import { AmbientLight, AxesHelper, DirectionalLight, DirectionalLightHelper, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import { Map, PlaneProvider, MapProvider, TerrainMeshProvider, UTM, MERC, MartiniTerrainProvider } from '../src/index';
-import { createBox } from './shaderTest';
+import { Map, PlaneProvider, MapProvider, TerrainMeshProvider, UTM, MartiniTerrainProvider } from '../src/index';
 
 
 const scene = new Scene();
@@ -15,8 +14,11 @@ document.body.appendChild(renderer.domElement);
 
 const camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1e7 * 10);
 camera.up = new Vector3(0, 0, 1);
-camera.position.set(92635, -1255615, 1255615);
-camera.lookAt(0, 0, 0);
+// camera.position.set(92635, -1255615, 1255615);
+// camera.lookAt(0, 0, 0);
+
+camera.position.set(199968.43461198933, 2479805.6248926367, 1825.955617993283);
+camera.lookAt(204951.28184243775,  2480346.714316563,-5.419012486480361e-14)
 
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -40,6 +42,8 @@ const axesHelper = new AxesHelper(1e6);
 scene.add(axesHelper);
 
 const controls = new MapControls(camera, renderer.domElement);
+controls.position0.set(199968.43461198933, 2479805.6248926367, 1825.955617993283);
+controls.target.set(204951.28184243775,  2480346.714316563,-5.419012486480361e-14)
 
 const stats = new (Stats as any)();
 document.body.appendChild(stats.dom);
@@ -55,11 +59,13 @@ const planProvider = new PlaneProvider();
 planProvider.coordType = UTM;
 
 const martiniProvider = new MartiniTerrainProvider();
-// martiniProvider.source = 'https://api.mapbox.com/v4/mapbox.terrain-rgb/[z]/[x]/[y].pngraw?access_token=sk.eyJ1IjoiMTIzNDU2bWFwYm94IiwiYSI6ImNsZGdzNDQ4NDAwYnk0MG1kOWM3dTZqdzkifQ.agAAAPQnGwvT4B3wPpWrWA';
+// martiniProvider.source = 'https://api.maptiler.com/tiles/terrain-rgb-v2/[z]/[x]/[y].webp?key=L55MtSxL94Yb4hQeWewp';
+martiniProvider.source = 'http://tile.writter.com.cn/tiles/[z]/[x]/[y]/terrain.webp';
 martiniProvider.coordType = UTM;
 
 const mapProvider = new MapProvider();
-mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
+// mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
+mapProvider.source = 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&x=[x]&y=[y]&z=[z]';
 mapProvider.showTileNo = false;
 mapProvider.useWorker = true;
 

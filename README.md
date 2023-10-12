@@ -1,6 +1,6 @@
 # SATELLITE MAP
 
-![avatar](./example/screen.png)
+![screenshot](./example/screen.png)
 
 [Demo](https://xianziljl.github.io/three-satellite-map/example/) | [API](https://xianziljl.github.io/three-satellite-map/doc/)
 

@@ -1,5 +1,7 @@
 # SATELLITE MAP
 
+![avatar](./example/screen.png)
+
 [Demo](https://xianziljl.github.io/three-satellite-map/example/) | [API](https://xianziljl.github.io/three-satellite-map/doc/)
 
 ## 基本使用

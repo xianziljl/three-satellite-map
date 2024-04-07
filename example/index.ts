@@ -60,7 +60,7 @@ planProvider.coordType = UTM;
 
 const martiniProvider = new MartiniTerrainProvider();
 // martiniProvider.source = 'https://api.maptiler.com/tiles/terrain-rgb-v2/[z]/[x]/[y].webp?key=L55MtSxL94Yb4hQeWewp';
-martiniProvider.source = 'http://tile.writter.com.cn/tiles/[z]/[x]/[y]/terrain.webp';
+martiniProvider.source = 'https://tile.writter.com.cn/tiles/[z]/[x]/[y]/terrain.webp';
 martiniProvider.coordType = UTM;
 
 const mapProvider = new MapProvider();

@@ -64,8 +64,8 @@ martiniProvider.source = 'http://tile.writter.com.cn/tiles/[z]/[x]/[y]/terrain.w
 martiniProvider.coordType = UTM;
 
 const mapProvider = new MapProvider();
-// mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
-mapProvider.source = 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&x=[x]&y=[y]&z=[z]';
+mapProvider.source = 'https://mts2.google.com/vt/lyrs=s&hl=zh-CN&x=[x]&y=[y]&z=[z]';
+// mapProvider.source = 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&x=[x]&y=[y]&z=[z]';
 mapProvider.showTileNo = false;
 mapProvider.useWorker = true;
 
